@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowUpRight, User, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { APP_NAME, TOKENS, USDC_ABI } from "@/lib/constants";
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import api from "@/lib/api";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
 import { parseUnits, isAddress, parseAbi } from "viem";
 
 export default function Send() {
@@ -17,6 +18,7 @@ export default function Send() {
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
   const [isSending, setIsSending] = useState(false);
 
+  const { address: userAddress } = useAccount();
   const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
@@ -36,6 +38,17 @@ export default function Send() {
       toast.success("Payment sent successfully!", {
         description: `$${walletData.amount} sent to wallet`,
       });
+
+      // Save transaction to database
+      api.post('/transactions', {
+        hash,
+        from: userAddress,
+        to: walletData.address,
+        amount: walletData.amount,
+        token: selectedToken.symbol,
+        type: 'send'
+      }).catch(err => console.error("Failed to save transaction:", err));
+
       setWalletData({ address: "", amount: "" });
     }
   }, [isConfirmed]);
