@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight, ArrowDownLeft, Link2, Eye, EyeOff, TrendingUp } from "lucide-react";
 import { USER } from "@/lib/constants";
-import { getFirstName } from "@/lib/utils";
+import { getFirstName, getTotalBalance } from "@/lib/utils";
 
 const recentTransactions = [
   { id: "1", type: "received", from: "@alice", amount: "250.00", time: "2 hours ago" },
@@ -15,7 +15,17 @@ const recentTransactions = [
 export default function Dashboard() {
   const navigate = useNavigate();
   const [balanceVisible, setBalanceVisible] = useState(true);
-  const balance = "1,234.56";
+  const [balance, setBalance] = useState("0.00");
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (USER?.address) {
+        const total = await getTotalBalance(USER.address);
+        setBalance(total);
+      }
+    };
+    fetchBalance();
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
