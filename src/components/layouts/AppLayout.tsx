@@ -53,7 +53,7 @@ export default function AppLayout() {
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center justify-between px-6 border-b border-sidebar-border">
-            <h1 className="text-xl font-display font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-white text-xl font-display font-bold">
               {APP_NAME}
             </h1>
             <Button
@@ -106,10 +106,10 @@ export default function AppLayout() {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex-1" />
-          <Button onClick={() => open()} variant={isConnected ? "outline" : "default"}>
+          <Button onClick={() => open()} variant={isConnected ? "outline" : "default"} className="gradient-primary hover:opacity-90 transition-smooth">
             {isConnected ? (
               <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
+                <span className="h-2 w-2 rounded-full bg-white" />
                 {address?.slice(0, 6)}...{address?.slice(-4)}
               </span>
             ) : (
