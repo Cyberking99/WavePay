@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
+import { APP_NAME } from "@/lib/constants";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function Auth() {
             <Wallet className="h-10 w-10 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-white text-4xl font-display font-bold mb-2">PayFlow</h1>
+            <h1 className="text-white text-4xl font-display font-bold mb-2">{APP_NAME}</h1>
             <p className="text-muted-foreground text-lg">
               Send and receive stablecoin payments with ease
             </p>

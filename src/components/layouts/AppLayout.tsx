@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Home, Send, Link2, History, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/constants";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -38,7 +39,7 @@ export default function AppLayout() {
           {/* Logo */}
           <div className="flex h-16 items-center justify-between px-6 border-b border-sidebar-border">
             <h1 className="text-xl font-display font-bold bg-gradient-primary bg-clip-text text-transparent">
-              PayFlow
+              {APP_NAME}
             </h1>
             <Button
               variant="ghost"

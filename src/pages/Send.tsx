@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowUpRight, User, Wallet } from "lucide-react";
 import { toast } from "sonner";
+import { APP_NAME } from "@/lib/constants";
 
 export default function Send() {
   const [usernameData, setUsernameData] = useState({ username: "", amount: "" });
@@ -15,7 +16,7 @@ export default function Send() {
   const handleSendByUsername = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);
-    
+
     setTimeout(() => {
       toast.success("Payment sent successfully!", {
         description: `$${usernameData.amount} sent to @${usernameData.username}`,
@@ -28,7 +29,7 @@ export default function Send() {
   const handleSendByWallet = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);
-    
+
     setTimeout(() => {
       toast.success("Payment sent successfully!", {
         description: `$${walletData.amount} sent to wallet`,
@@ -77,7 +78,7 @@ export default function Send() {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter the recipient's PayFlow username
+                    Enter the recipient's {APP_NAME} username
                   </p>
                 </div>
 

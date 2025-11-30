@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Copy, ExternalLink, Power, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { APP_URL } from "@/lib/constants";
 
 const mockLinks = [
   {
@@ -42,7 +43,7 @@ export default function PaymentLinks() {
   const [links, setLinks] = useState(mockLinks);
 
   const copyLink = (id: string) => {
-    navigator.clipboard.writeText(`https://payflow.app/pay/${id}`);
+    navigator.clipboard.writeText(`${APP_URL}/pay/${id}`);
     toast.success("Link copied to clipboard!");
   };
 
