@@ -30,7 +30,7 @@ export default function Auth() {
             <Wallet className="h-10 w-10 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-4xl font-display font-bold mb-2">PayFlow</h1>
+            <h1 className="text-white text-4xl font-display font-bold mb-2">PayFlow</h1>
             <p className="text-muted-foreground text-lg">
               Send and receive stablecoin payments with ease
             </p>
