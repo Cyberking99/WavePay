@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,16 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, Link2 } from "lucide-react";
 import { toast } from "sonner";
+import { CustomField, FieldType } from "@/lib/types";
 
-type FieldType = "text" | "select" | "textarea";
 
-interface CustomField {
-  id: string;
-  label: string;
-  type: FieldType;
-  required: boolean;
-  options?: string[];
-}
 
 export default function CreateLink() {
   const navigate = useNavigate();
@@ -27,6 +21,7 @@ export default function CreateLink() {
   const [description, setDescription] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [optionInputs, setOptionInputs] = useState<Record<string, string>>({});
   const [isCreating, setIsCreating] = useState(false);
 
   const addCustomField = () => {
@@ -55,18 +50,31 @@ export default function CreateLink() {
     e.preventDefault();
     setIsCreating(true);
 
-    setTimeout(() => {
+    try {
+      await api.post('/links', {
+        amount,
+        description,
+        type: linkType,
+        expiryDate: linkType === 'time-based' ? expiryDate : null,
+        customFields
+      });
+
       toast.success("Payment link created!", {
         description: "Your link has been generated and is ready to share",
       });
       navigate("/links");
-    }, 1000);
+    } catch (error) {
+      console.error("Create link error:", error);
+      toast.error("Failed to create link");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-display font-bold mb-1">Create Payment Link</h1>
+        <h1 className="text-white text-3xl font-display font-bold mb-1">Create Payment Link</h1>
         <p className="text-muted-foreground">Generate a shareable link to receive payments</p>
       </div>
 
@@ -176,6 +184,23 @@ export default function CreateLink() {
                         <SelectItem value="textarea">Text Area</SelectItem>
                       </SelectContent>
                     </Select>
+
+                    {field.type === 'select' && (
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Options (comma separated)</Label>
+                        <Input
+                          placeholder="Option 1, Option 2, Option 3"
+                          value={optionInputs[field.id] ?? field.options?.join(', ') ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setOptionInputs(prev => ({ ...prev, [field.id]: val }));
+                            updateField(field.id, {
+                              options: val.split(',').map(s => s.trim()).filter(Boolean)
+                            });
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                   <Button
                     type="button"

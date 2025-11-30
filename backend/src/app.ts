@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
+import linkRoutes from './routes/linkRoutes.js';
 
 const app = express();
 
@@ -36,5 +37,6 @@ app.use('/api/user', userRoutes); // Note: /me is mounted here, so it becomes /a
 // I will need to update frontend.
 
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/links', linkRoutes);
 
 export default app;

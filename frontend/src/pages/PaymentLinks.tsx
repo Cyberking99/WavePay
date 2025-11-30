@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,40 +8,24 @@ import { Copy, ExternalLink, Power, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { APP_URL } from "@/lib/constants";
 
-const mockLinks = [
-  {
-    id: "1",
-    amount: "50.00",
-    description: "Consulting Service",
-    type: "one-time",
-    status: "active",
-    uses: 0,
-    created: "2024-01-15",
-  },
-  {
-    id: "2",
-    amount: "25.00",
-    description: "Monthly Subscription",
-    type: "public",
-    status: "active",
-    uses: 12,
-    created: "2024-01-10",
-  },
-  {
-    id: "3",
-    amount: "100.00",
-    description: "Event Ticket",
-    type: "time-based",
-    status: "expired",
-    uses: 5,
-    expiry: "2024-01-20",
-    created: "2024-01-05",
-  },
-];
+// Mock data removed
 
 export default function PaymentLinks() {
   const navigate = useNavigate();
-  const [links, setLinks] = useState(mockLinks);
+  const [links, setLinks] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchLinks = async () => {
+      try {
+        const response = await api.get('/links');
+        setLinks(response.data.links);
+      } catch (error) {
+        console.error("Fetch links error:", error);
+        toast.error("Failed to load links");
+      }
+    };
+    fetchLinks();
+  }, []);
 
   const copyLink = (id: string) => {
     navigator.clipboard.writeText(`${APP_URL}/pay/${id}`);
@@ -135,12 +120,12 @@ export default function PaymentLinks() {
                 </div>
                 <div>
                   <p className="text-muted-foreground mb-1">Created</p>
-                  <p className="font-medium">{link.created}</p>
+                  <p className="font-medium">{new Date(link.createdAt).toLocaleDateString()}</p>
                 </div>
                 {link.expiry && (
                   <div>
                     <p className="text-muted-foreground mb-1">Expires</p>
-                    <p className="font-medium">{link.expiry}</p>
+                    <p className="font-medium">{new Date(link.expiryDate).toLocaleDateString()}</p>
                   </div>
                 )}
               </div>
