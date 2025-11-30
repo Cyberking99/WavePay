@@ -1,25 +1,23 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import { APP_NAME } from "@/lib/constants";
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [isConnecting, setIsConnecting] = useState(false);
+  const { open } = useAppKit();
+  const { isConnected } = useAppKitAccount();
+
+  useEffect(() => {
+    if (isConnected) {
+      navigate("/dashboard");
+    }
+  }, [isConnected, navigate]);
 
   const handleConnect = async () => {
-    setIsConnecting(true);
-    // Simulate Privy connection
-    setTimeout(() => {
-      // Check if user is new (in real app, check from Privy/backend)
-      const isNewUser = true; // Simulate new user
-      if (isNewUser) {
-        navigate("/onboarding");
-      } else {
-        navigate("/dashboard");
-      }
-    }, 1500);
+    await open();
   };
 
   return (
@@ -56,20 +54,12 @@ export default function Auth() {
         {/* Connect Button */}
         <Button
           onClick={handleConnect}
-          disabled={isConnecting}
           className="w-full h-12 text-base font-medium gradient-primary hover:opacity-90 transition-smooth"
         >
-          {isConnecting ? (
-            <>
-              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-              Connecting...
-            </>
-          ) : (
-            <>
-              <Wallet className="mr-2 h-5 w-5" />
-              Connect Wallet
-            </>
-          )}
+          <>
+            <Wallet className="mr-2 h-5 w-5" />
+            Connect Wallet
+          </>
         </Button>
 
         <p className="text-xs text-muted-foreground">
