@@ -1,17 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowUpRight, User, Wallet } from "lucide-react";
 import { toast } from "sonner";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, TOKENS, USDC_ABI } from "@/lib/constants";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { parseUnits, isAddress, parseAbi } from "viem";
 
 export default function Send() {
   const [usernameData, setUsernameData] = useState({ username: "", amount: "" });
   const [walletData, setWalletData] = useState({ address: "", amount: "" });
+  const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
   const [isSending, setIsSending] = useState(false);
+
+  const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  useEffect(() => {
+    if (isPending || isConfirming) {
+      setIsSending(true);
+    } else {
+      setIsSending(false);
+    }
+  }, [isPending, isConfirming]);
+
+  useEffect(() => {
+    if (isConfirmed) {
+      toast.success("Payment sent successfully!", {
+        description: `$${walletData.amount} sent to wallet`,
+      });
+      setWalletData({ address: "", amount: "" });
+    }
+  }, [isConfirmed]);
+
+  useEffect(() => {
+    if (writeError) {
+      toast.error("Transaction failed", {
+        description: writeError.message,
+      });
+      setIsSending(false);
+    }
+  }, [writeError]);
+
 
   const handleSendByUsername = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,21 +65,37 @@ export default function Send() {
 
   const handleSendByWallet = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSending(true);
 
-    setTimeout(() => {
-      toast.success("Payment sent successfully!", {
-        description: `$${walletData.amount} sent to wallet`,
+    if (!walletData.address || !walletData.amount) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (!isAddress(walletData.address)) {
+      toast.error("Invalid wallet address");
+      return;
+    }
+
+    try {
+      const amount = parseUnits(walletData.amount, selectedToken.decimals);
+
+      writeContract({
+        address: selectedToken.address as `0x${string}`,
+        abi: parseAbi(USDC_ABI),
+        functionName: 'transfer',
+        args: [walletData.address as `0x${string}`, amount],
       });
-      setWalletData({ address: "", amount: "" });
-      setIsSending(false);
-    }, 1500);
+
+    } catch (error) {
+      console.error("Error sending payment:", error);
+      toast.error("Failed to initiate payment");
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-display font-bold mb-1">Send Money</h1>
+        <h1 className="text-white text-3xl font-display font-bold mb-1">Send Money</h1>
         <p className="text-muted-foreground">Transfer funds to another user or wallet</p>
       </div>
 
@@ -98,6 +151,31 @@ export default function Send() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Token</Label>
+                  <Select
+                    value={selectedToken.symbol}
+                    onValueChange={(value) => {
+                      const token = TOKENS.find((t) => t.symbol === value);
+                      if (token) setSelectedToken(token);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select token" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TOKENS.map((token) => (
+                        <SelectItem key={token.symbol} value={token.symbol}>
+                          <div className="flex items-center gap-2">
+                            <img src={token.logo} alt={token.name} className="w-5 h-5" />
+                            {token.symbol}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <Button
                   type="submit"
                   className="w-full h-11 gradient-primary hover:opacity-90 transition-smooth"
@@ -147,6 +225,31 @@ export default function Send() {
                     }
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Token</Label>
+                  <Select
+                    value={selectedToken.symbol}
+                    onValueChange={(value) => {
+                      const token = TOKENS.find((t) => t.symbol === value);
+                      if (token) setSelectedToken(token);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select token" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TOKENS.map((token) => (
+                        <SelectItem key={token.symbol} value={token.symbol}>
+                          <div className="flex items-center gap-2">
+                            <img src={token.logo} alt={token.name} className="w-5 h-5" />
+                            {token.symbol}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <Button

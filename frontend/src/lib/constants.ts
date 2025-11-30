@@ -31,7 +31,7 @@ export const TOKENS = [
     {
         name: "USDC",
         symbol: "USDC",
-        decimals: 18,
+        decimals: 6,
         address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         logo: TOKEN_LOGOS.USDC,
     }
