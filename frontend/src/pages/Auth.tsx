@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
-import { APP_NAME, API_URL } from "@/lib/constants";
+import { APP_NAME, API_URL, ROUTES } from "@/lib/constants";
 import { useAppKit } from "@reown/appkit/react";
 import { useSignMessage, useDisconnect, useAccount } from "wagmi";
 import { useToast } from "@/components/ui/use-toast";
@@ -24,7 +24,7 @@ export default function Auth() {
         const storedAddress = localStorage.getItem("wavepay_address");
 
         if (storedSignature && storedAddress === address) {
-          navigate("/dashboard");
+          navigate(ROUTES.DASHBOARD);
         } else {
           try {
             const signature = await signMessageAsync({
@@ -53,9 +53,9 @@ export default function Auth() {
 
             setTimeout(() => {
               if (response.data.isOnboarded) {
-                navigate("/dashboard");
+                navigate(ROUTES.DASHBOARD);
               } else {
-                navigate("/onboarding");
+                navigate(ROUTES.ONBOARDING);
               }
             }, 1000);
           } catch (error) {

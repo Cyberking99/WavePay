@@ -6,13 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User, Wallet, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { USER, ROUTES } from "@/lib/constants";
+import { getInitials } from "@/lib/utils";
+import { useDisconnect } from "wagmi";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
+  const navigate = useNavigate();
+  const { disconnect } = useDisconnect();
+
   const [profile, setProfile] = useState({
-    fullName: "John Doe",
-    username: "johndoe",
-    age: "25",
-    walletAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0e2a",
+    fullName: USER?.fullName,
+    username: USER?.username,
+    walletAddress: USER?.address,
   });
 
   const handleSave = () => {
@@ -21,8 +27,10 @@ export default function Profile() {
 
   const handleDisconnect = () => {
     toast.success("Wallet disconnected");
-    // Navigate to auth page in real app
+    disconnect();
+    navigate(ROUTES.AUTH);
   };
+
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -40,7 +48,7 @@ export default function Profile() {
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                {profile.fullName.split(" ").map((n) => n[0]).join("")}
+                {getInitials(profile.fullName)}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -65,16 +73,7 @@ export default function Profile() {
                 id="username"
                 value={profile.username}
                 onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                type="number"
-                value={profile.age}
-                onChange={(e) => setProfile({ ...profile, age: e.target.value })}
+                disabled
               />
             </div>
           </div>

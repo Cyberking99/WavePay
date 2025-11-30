@@ -3,15 +3,15 @@ import { Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Home, Send, Link2, History, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { APP_NAME, USER } from "@/lib/constants";
+import { APP_NAME, USER, ROUTES } from "@/lib/constants";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Send Money", href: "/send", icon: Send },
-  { name: "Payment Links", href: "/links", icon: Link2 },
-  { name: "Transactions", href: "/transactions", icon: History },
-  { name: "Profile", href: "/profile", icon: User },
+  { name: "Dashboard", href: ROUTES.DASHBOARD, icon: Home },
+  { name: "Send Money", href: ROUTES.SEND, icon: Send },
+  { name: "Payment Links", href: ROUTES.LINKS, icon: Link2 },
+  { name: "Transactions", href: ROUTES.TRANSACTIONS, icon: History },
+  { name: "Profile", href: ROUTES.PROFILE, icon: User },
 ];
 
 export default function AppLayout() {
@@ -32,11 +32,11 @@ export default function AppLayout() {
   console.log(USER);
 
   if (!isConnected) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={ROUTES.AUTH} replace />;
   }
 
   if (!USER) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to={ROUTES.ONBOARDING} replace />;
   }
 
   return (
