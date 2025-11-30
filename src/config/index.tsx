@@ -1,6 +1,6 @@
 import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { mainnet, arbitrum, celo } from '@reown/appkit/networks'
+import { baseSepolia } from '@reown/appkit/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
 import { ReactNode } from 'react'
@@ -11,13 +11,13 @@ const projectId = import.meta.env.VITE_REOWN_PROJECT_ID
 // 2. Create a metadata object - optional
 const metadata = {
     name: 'WavePay',
-    description: 'AppKit Example',
-    url: 'https://reown.com/appkit', // origin must match your domain & subdomain
-    icons: ['https://assets.reown.com/reown-profile-pic.png']
+    description: 'WavePay - Blockchain Stablecoin Payments',
+    url: 'https://wave-pay.vercel.app', // origin must match your domain & subdomain
+    icons: ['https://wave-pay.vercel.app/favicon.ico']
 }
 
 // 3. Set the networks
-const networks = [mainnet, arbitrum, celo]
+const networks = [baseSepolia]
 
 // 4. Create Wagmi Adapter
 const wagmiAdapter = new WagmiAdapter({
