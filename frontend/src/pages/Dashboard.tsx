@@ -19,7 +19,7 @@ export default function Dashboard() {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Welcome Header */}
       <div>
-        <h1 className="text-3xl font-display font-bold mb-1">Welcome back, John</h1>
+        <h1 className="text-white text-3xl font-display font-bold mb-1">Welcome back, John</h1>
         <p className="text-muted-foreground">Here's what's happening with your account</p>
       </div>
 
@@ -112,9 +112,8 @@ export default function Dashboard() {
             >
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    tx.type === "received" ? "bg-primary/10" : "bg-muted"
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === "received" ? "bg-primary/10" : "bg-muted"
+                    }`}
                 >
                   {tx.type === "received" ? (
                     <ArrowDownLeft className="h-5 w-5 text-primary" />

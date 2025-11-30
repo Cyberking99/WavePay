@@ -43,6 +43,7 @@ export default function Auth() {
 
             console.log("Response:", response);
 
+            localStorage.setItem("wavepay_user", JSON.stringify(response.data.user));
             localStorage.setItem("wavepay_signature", signature);
             localStorage.setItem("wavepay_address", address);
             toast({

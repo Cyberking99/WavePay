@@ -28,7 +28,7 @@ export default function Onboarding() {
       const signature = localStorage.getItem("wavepay_signature");
       const address = localStorage.getItem("wavepay_address");
 
-      await axios.post(
+      const response = await axios.post(
         `${API_URL}/user/onboard`,
         formData,
         {
@@ -39,6 +39,7 @@ export default function Onboarding() {
         }
       );
 
+      localStorage.setItem("wavepay_user", JSON.stringify(response.data.user));
       toast.success("Profile created successfully!");
       navigate("/dashboard");
     } catch (error) {
