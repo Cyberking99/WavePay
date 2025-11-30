@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Home, Send, Link2, History, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/constants";
-import { useAppKit } from "@reown/appkit/react";
-import { useAccount } from "wagmi";
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -20,7 +19,19 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { open } = useAppKit();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, status } = useAppKitAccount();
+
+  if (status === "connecting" || status === "reconnecting") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!isConnected) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background dark">
