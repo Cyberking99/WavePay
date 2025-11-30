@@ -30,3 +30,23 @@ export const onboardUser = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+export const getUserByUsername = async (req: Request, res: Response) => {
+    try {
+        const { username } = req.params;
+
+        const user = await User.findOne({
+            where: { username },
+            attributes: ['address', 'username', 'fullName']
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ success: true, user });
+    } catch (error) {
+        console.error('User lookup error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};

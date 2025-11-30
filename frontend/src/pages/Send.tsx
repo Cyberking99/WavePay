@@ -17,6 +17,7 @@ export default function Send() {
   const [walletData, setWalletData] = useState({ address: "", amount: "" });
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
   const [isSending, setIsSending] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState("username");
 
   const { address: userAddress } = useAccount();
   const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
@@ -49,7 +50,11 @@ export default function Send() {
         type: 'send'
       }).catch(err => console.error("Failed to save transaction:", err));
 
-      setWalletData({ address: "", amount: "" });
+      if (selectedMethod == "username") {
+        setUsernameData({ username: "", amount: "" });
+      } else {
+        setWalletData({ address: "", amount: "" });
+      }
     }
   }, [isConfirmed]);
 
@@ -64,19 +69,41 @@ export default function Send() {
 
 
   const handleSendByUsername = async (e: React.FormEvent) => {
+    setSelectedMethod("username");
     e.preventDefault();
     setIsSending(true);
 
-    setTimeout(() => {
-      toast.success("Payment sent successfully!", {
-        description: `$${usernameData.amount} sent to @${usernameData.username}`,
+    try {
+      // Lookup user
+      const response = await api.get(`/user/lookup/${usernameData.username.replace('@', '')}`);
+      const recipient = response.data.user;
+
+      if (!recipient || !recipient.address) {
+        toast.error("User not found");
+        setIsSending(false);
+        return;
+      }
+
+      const amount = parseUnits(usernameData.amount, selectedToken.decimals);
+
+      writeContract({
+        address: selectedToken.address as `0x${string}`,
+        abi: parseAbi(USDC_ABI),
+        functionName: 'transfer',
+        args: [recipient.address as `0x${string}`, amount],
       });
-      setUsernameData({ username: "", amount: "" });
+
+      setWalletData(prev => ({ ...prev, amount: usernameData.amount, address: recipient.address }));
+
+    } catch (error) {
+      console.error("Error sending payment:", error);
+      toast.error("Failed to initiate payment");
       setIsSending(false);
-    }, 1500);
+    }
   };
 
   const handleSendByWallet = async (e: React.FormEvent) => {
+    setSelectedMethod("wallet");
     e.preventDefault();
 
     if (!walletData.address || !walletData.amount) {
