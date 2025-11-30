@@ -1,20 +1,73 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
-import { APP_NAME } from "@/lib/constants";
-import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
+import { APP_NAME, API_URL } from "@/lib/constants";
+import { useAppKit } from "@reown/appkit/react";
+import { useSignMessage, useDisconnect, useAccount } from "wagmi";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Auth() {
   const navigate = useNavigate();
   const { open } = useAppKit();
-  const { isConnected } = useAppKitAccount();
+  const { isConnected, address, status } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const { disconnect } = useDisconnect();
+
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (isConnected) {
-      navigate("/dashboard");
-    }
-  }, [isConnected, navigate]);
+    const handleAuth = async () => {
+      if (status === 'connected' && address) {
+        const storedSignature = localStorage.getItem("wavepay_signature");
+        const storedAddress = localStorage.getItem("wavepay_address");
+
+        if (storedSignature && storedAddress === address) {
+          navigate("/dashboard");
+        } else {
+          try {
+            const signature = await signMessageAsync({
+              message: "Authenticate with WavePay",
+              account: address,
+            });
+
+            console.log("Signature:", signature);
+
+            const response = await axios.post(`${API_URL}/auth/verify`, {}, {
+              headers: {
+                "x-api-key": signature,
+                "x-wallet-address": address
+              }
+            });
+
+            console.log("Response:", response);
+
+            localStorage.setItem("wavepay_signature", signature);
+            localStorage.setItem("wavepay_address", address);
+            toast({
+              title: "Success",
+              description: "Authentication successful"
+            });
+
+            setTimeout(() => {
+              navigate("/dashboard");
+            }, 1000);
+          } catch (error) {
+            console.error("Signing/Verification failed:", error);
+            toast({
+              title: "Error",
+              description: "Authentication failed",
+              variant: "destructive",
+            });
+            disconnect();
+          }
+        }
+      }
+    };
+
+    handleAuth();
+  }, [status, address, navigate, signMessageAsync, disconnect, toast]);
 
   const handleConnect = async () => {
     await open();
