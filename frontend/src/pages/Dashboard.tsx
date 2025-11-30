@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight, ArrowDownLeft, Link2, Eye, EyeOff, TrendingUp } from "lucide-react";
+import { USER } from "@/lib/constants";
+import { getFirstName } from "@/lib/utils";
 
 const recentTransactions = [
   { id: "1", type: "received", from: "@alice", amount: "250.00", time: "2 hours ago" },
@@ -19,7 +21,7 @@ export default function Dashboard() {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Welcome Header */}
       <div>
-        <h1 className="text-white text-3xl font-display font-bold mb-1">Welcome back, John</h1>
+        <h1 className="text-white text-3xl font-display font-bold mb-1">Welcome back, {getFirstName(USER?.fullName)}</h1>
         <p className="text-muted-foreground">Here's what's happening with your account</p>
       </div>
 

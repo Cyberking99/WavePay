@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Home, Send, Link2, History, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, USER } from "@/lib/constants";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 
 const navigation = [
@@ -29,8 +29,14 @@ export default function AppLayout() {
     );
   }
 
+  console.log(USER);
+
   if (!isConnected) {
     return <Navigate to="/" replace />;
+  }
+
+  if (!USER) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   return (
@@ -100,7 +106,7 @@ export default function AppLayout() {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden bg-primary text-white"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
