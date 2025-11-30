@@ -4,6 +4,8 @@ import { Home, Send, Link2, History, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/constants";
+import { useAppKit } from "@reown/appkit/react";
+import { useAccount } from "wagmi";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -17,6 +19,8 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { open } = useAppKit();
+  const { address, isConnected } = useAccount();
 
   return (
     <div className="min-h-screen bg-background dark">
@@ -91,6 +95,16 @@ export default function AppLayout() {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex-1" />
+          <Button onClick={() => open()} variant={isConnected ? "outline" : "default"}>
+            {isConnected ? (
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+                {address?.slice(0, 6)}...{address?.slice(-4)}
+              </span>
+            ) : (
+              "Connect Wallet"
+            )}
+          </Button>
         </header>
 
         {/* Page content */}
