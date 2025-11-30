@@ -5,42 +5,59 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "lucide-react";
+import { toast } from "sonner";
+import axios from "axios";
+import { API_URL } from "@/lib/constants";
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
-    age: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+  const handleSubmit = async () => {
+    if (!formData.fullName || !formData.username) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const signature = localStorage.getItem("wavepay_signature");
+      const address = localStorage.getItem("wavepay_address");
+
+      await axios.post(
+        `${API_URL}/user/onboard`,
+        formData,
+        {
+          headers: {
+            "x-api-key": signature,
+            "x-wallet-address": address,
+          },
+        }
+      );
+
+      toast.success("Profile created successfully!");
       navigate("/dashboard");
-    }, 1000);
+    } catch (error) {
+      console.error("Onboarding failed:", error);
+      toast.error("Failed to create profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const isValid = formData.fullName && formData.username && formData.age;
 
   return (
     <div className="min-h-screen bg-background dark flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-border">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-16 h-16 rounded-xl gradient-card flex items-center justify-center mb-2">
-            <User className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle className="text-2xl font-display">Complete Your Profile</CardTitle>
-          <CardDescription>
-            Let's get to know you better to personalize your experience
-          </CardDescription>
+        <CardHeader>
+          <CardTitle className="font-display text-2xl">Welcome to WavePay</CardTitle>
+          <CardDescription>Let's set up your profile to get started</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
               <Input
@@ -48,7 +65,6 @@ export default function Onboarding() {
                 placeholder="John Doe"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                required
               />
             </div>
 
@@ -59,35 +75,24 @@ export default function Onboarding() {
                 placeholder="johndoe"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                Others can send you money using this username
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                type="number"
-                placeholder="18"
-                min="13"
-                max="120"
-                value={formData.age}
-                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                required
               />
             </div>
+          </div>
 
-            <Button
-              type="submit"
-              className="w-full h-11 gradient-primary hover:opacity-90 transition-smooth"
-              disabled={!isValid || isSubmitting}
-            >
-              {isSubmitting ? "Setting up..." : "Continue to Dashboard"}
-            </Button>
-          </form>
+          <Button
+            onClick={handleSubmit}
+            className="w-full gradient-primary hover:opacity-90 transition-smooth"
+            disabled={loading}
+          >
+            {loading ? (
+              "Creating Profile..."
+            ) : (
+              <>
+                <User className="mr-2 h-4 w-4" />
+                Complete Setup
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>

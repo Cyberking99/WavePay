@@ -51,7 +51,11 @@ export default function Auth() {
             });
 
             setTimeout(() => {
-              navigate("/dashboard");
+              if (response.data.isOnboarded) {
+                navigate("/dashboard");
+              } else {
+                navigate("/onboarding");
+              }
             }, 1000);
           } catch (error) {
             console.error("Signing/Verification failed:", error);
