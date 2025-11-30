@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, Link2 } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ export default function CreateLink() {
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [optionInputs, setOptionInputs] = useState<Record<string, string>>({});
   const [isCreating, setIsCreating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const addCustomField = () => {
     setCustomFields([
@@ -46,8 +48,12 @@ export default function CreateLink() {
     );
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handlePreview = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowPreview(true);
+  };
+
+  const handleCreate = async () => {
     setIsCreating(true);
 
     try {
@@ -68,6 +74,7 @@ export default function CreateLink() {
       toast.error("Failed to create link");
     } finally {
       setIsCreating(false);
+      setShowPreview(false);
     }
   };
 
@@ -78,7 +85,7 @@ export default function CreateLink() {
         <p className="text-muted-foreground">Generate a shareable link to receive payments</p>
       </div>
 
-      <form onSubmit={handleCreate} className="space-y-6">
+      <form onSubmit={handlePreview} className="space-y-6">
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="font-display">Link Configuration</CardTitle>
@@ -229,18 +236,79 @@ export default function CreateLink() {
         <Button
           type="submit"
           className="w-full h-12 gradient-primary hover:opacity-90 transition-smooth"
-          disabled={isCreating}
         >
-          {isCreating ? (
-            "Creating..."
-          ) : (
-            <>
-              <Link2 className="mr-2 h-5 w-5" />
-              Create Payment Link
-            </>
-          )}
+          Preview Payment Link
         </Button>
       </form>
+
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Preview Payment Link</DialogTitle>
+            <DialogDescription>
+              Review the details before creating your payment link.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">Amount</p>
+                <p className="font-medium">${amount}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Type</p>
+                <p className="font-medium capitalize">{linkType.replace('-', ' ')}</p>
+              </div>
+              {description && (
+                <div className="col-span-2">
+                  <p className="text-muted-foreground">Description</p>
+                  <p className="font-medium">{description}</p>
+                </div>
+              )}
+              {linkType === 'time-based' && expiryDate && (
+                <div className="col-span-2">
+                  <p className="text-muted-foreground">Expires</p>
+                  <p className="font-medium">{new Date(expiryDate).toLocaleString()}</p>
+                </div>
+              )}
+            </div>
+
+            {customFields.length > 0 && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium mb-2">Custom Fields</p>
+                <ul className="text-sm space-y-1">
+                  {customFields.map(field => (
+                    <li key={field.id} className="text-muted-foreground">
+                      • {field.label || '(Untitled)'} ({field.type})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPreview(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreate}
+              className="gradient-primary hover:opacity-90"
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                "Creating..."
+              ) : (
+                <>
+                  <Link2 className="mr-2 h-4 w-4" />
+                  Create Link
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
