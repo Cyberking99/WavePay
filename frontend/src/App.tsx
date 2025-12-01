@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Send from "./pages/Send";
 import CreateLink from "./pages/CreateLink";
 import PaymentLinks from "./pages/PaymentLinks";
+import LinkDetails from "./pages/LinkDetails";
 import Transactions from "./pages/Transactions";
 import TransactionDetail from "./pages/TransactionDetail";
 import Profile from "./pages/Profile";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/send" element={<Send />} />
             <Route path="/links" element={<PaymentLinks />} />
             <Route path="/links/create" element={<CreateLink />} />
+            <Route path="/links/:id" element={<LinkDetails />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/transactions/:id" element={<TransactionDetail />} />
             <Route path="/profile" element={<Profile />} />

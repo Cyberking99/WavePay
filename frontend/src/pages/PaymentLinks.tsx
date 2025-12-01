@@ -4,7 +4,7 @@ import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Copy, ExternalLink, Power, Plus } from "lucide-react";
+import { Copy, ExternalLink, Power, Plus, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { APP_URL } from "@/lib/constants";
 
@@ -25,20 +25,17 @@ export default function PaymentLinks() {
     fetchLinks();
   }, []);
 
-  const copyLink = (id: string) => {
-    navigator.clipboard.writeText(`${APP_URL}/pay/${id}`);
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
     toast.success("Link copied to clipboard");
   };
 
-  const openLink = (id: string) => {
-    window.open(`${APP_URL}/pay/${id}`, '_blank');
-  };
-
   const toggleStatus = (id: string) => {
+    // This would need an API endpoint to actually toggle status
     setLinks(
       links.map((link) =>
         link.id === id
-          ? { ...link, status: link.active === 1 ? "inactive" : "active" }
+          ? { ...link, active: !link.active }
           : link
       )
     );
@@ -46,7 +43,7 @@ export default function PaymentLinks() {
   };
 
   const isLinkActive = (link: any) => {
-    return link.type == "time-based" ? link.expiryDate > new Date().toISOString() && link.active == 1 : link.active == 1;
+    return link.type == "time-based" ? new Date(link.expiryDate) > new Date() && link.active : link.active;
   };
 
   return (
@@ -67,17 +64,23 @@ export default function PaymentLinks() {
 
       <div className="grid gap-4">
         {links.map((link) => (
-          <>
-            {console.log(link)}
-            <Card key={link.id} className="border-border">
-              <CardHeader>
-                <div className="flex items-start justify-between">
+          <Card
+            key={link.id}
+            className="group relative bg-card hover:bg-accent/50 border border-border rounded-xl transition-all duration-300 hover:shadow-lg cursor-pointer"
+            onClick={() => navigate(`/links/${link.linkId}`)}
+          >
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
+                    <Link2 className="h-6 w-6" />
+                  </div>
                   <div className="space-y-1">
-                    <CardTitle className="font-display text-xl">
-                      {link.amount && `$${link.amount}`}
+                    <CardTitle className="font-display text-xl flex items-center gap-2">
+                      {link.amount ? `$${link.amount}` : "Optional Amount"}
                       <Badge
                         variant={isLinkActive(link) ? "default" : "destructive"}
-                        className="ml-3"
+                        className="ml-2"
                       >
                         {isLinkActive(link) ? "Active" : "Inactive"}
                       </Badge>
@@ -86,50 +89,56 @@ export default function PaymentLinks() {
                       {link.description || "No description"}
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => copyLink(link.linkId)} title="Copy link">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openLink(link.linkId)} title="Open link">
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                    {isLinkActive(link) && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => toggleStatus(link.id)}
-                        title={isLinkActive(link) ? "Deactivate" : "Activate"}
-                      >
-                        <Power className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground mb-1">Type</p>
-                    <p className="font-medium capitalize">{link.type.replace("-", " ")}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground mb-1">Uses</p>
-                    <p className="font-medium">{link.uses}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground mb-1">Created</p>
-                    <p className="font-medium">{new Date(link.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  {link.type == "time-based" && link.expiry && (
-                    <div>
-                      <p className="text-muted-foreground mb-1">Expires</p>
-                      <p className="font-medium">{new Date(link.expiryDate).toLocaleDateString()}</p>
-                    </div>
-                  )}
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyToClipboard(`${APP_URL}/pay/${link.linkId}`);
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(`${APP_URL}/pay/${link.linkId}`, "_blank");
+                    }}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground mb-1">Type</p>
+                  <p className="font-medium capitalize">{link.type.replace("-", " ")}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-1">Uses</p>
+                  <p className="font-medium">{link.uses}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-1">Created</p>
+                  <p className="font-medium">{new Date(link.createdAt).toLocaleDateString()}</p>
+                </div>
+                {link.type === "time-based" && link.expiryDate && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Expires</p>
+                    <p className="font-medium">{new Date(link.expiryDate).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

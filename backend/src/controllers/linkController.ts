@@ -60,11 +60,13 @@ export const getLinkById = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Link not found' });
         }
 
-        if (!link.active) {
-            return res.status(400).json({ error: 'Link is inactive' });
-        }
+        // Fetch associated transactions
+        const transactions = await Transaction.findAll({
+            where: { linkId: link.id },
+            order: [['createdAt', 'DESC']]
+        });
 
-        res.json({ success: true, link });
+        res.json({ success: true, link, transactions });
     } catch (error) {
         console.error('Fetch link error:', error);
         res.status(500).json({ error: 'Internal server error' });
