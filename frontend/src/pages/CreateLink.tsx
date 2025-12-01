@@ -93,7 +93,7 @@ export default function CreateLink() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount (USD)</Label>
+              <Label htmlFor="amount">Amount (USD) (Optional)</Label>
               <Input
                 id="amount"
                 type="number"
@@ -102,7 +102,6 @@ export default function CreateLink() {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                required
               />
             </div>
 

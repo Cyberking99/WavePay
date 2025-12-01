@@ -4,7 +4,7 @@ import sequelize from '../config/database.js';
 
 export const createTransaction = async (req: Request, res: Response) => {
     try {
-        const { hash, from, to, amount, token, type } = req.body;
+        const { hash, from, to, amount, token, type, linkId } = req.body;
 
         if (!hash || !from || !to || !amount || !token || !type) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -17,7 +17,8 @@ export const createTransaction = async (req: Request, res: Response) => {
             amount,
             token,
             type,
-            status: 'confirmed'
+            status: 'confirmed',
+            linkId: linkId || null
         });
 
         res.json({ success: true, transaction });

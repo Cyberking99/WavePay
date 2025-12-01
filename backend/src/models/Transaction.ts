@@ -10,6 +10,7 @@ class Transaction extends Model {
     declare public token: string;
     declare public status: string;
     declare public type: string;
+    declare public linkId: string | null;
 }
 
 Transaction.init(
@@ -47,6 +48,14 @@ Transaction.init(
         type: {
             type: DataTypes.STRING,
             allowNull: false,
+        },
+        linkId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        transactionPayload: {
+            type: DataTypes.TEXT,
+            allowNull: true,
         },
     },
     {

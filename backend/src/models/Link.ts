@@ -3,10 +3,8 @@ import sequelize from '../config/database.js';
 
 class Link extends Model {
     declare public id: number;
-    declare public userId: number; // Assuming we link to internal user ID, or address? Let's use address for simplicity if User model uses address as key, but User model has ID. Let's use address to match other patterns or ID if we have auth user.
-    // User model has ID and address. Auth middleware attaches user to req.user.
-    // Let's use address as the foreign key reference or just store address.
-    // Storing address is safer for now as we rely on address for auth.
+    declare public linkId: string;
+    declare public userId: number;
     declare public address: string;
     declare public amount: string;
     declare public description: string;
@@ -24,13 +22,23 @@ Link.init(
             autoIncrement: true,
             primaryKey: true,
         },
+        linkId: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            allowNull: false,
+            unique: true,
+        },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
         address: {
             type: DataTypes.STRING,
             allowNull: false,
         },
         amount: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         description: {
             type: DataTypes.STRING,
