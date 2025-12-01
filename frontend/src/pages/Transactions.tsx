@@ -6,6 +6,7 @@ import { ArrowUpRight, ArrowDownLeft, Search, Link2 } from "lucide-react";
 import api from "@/lib/api";
 import { useAccount } from "wagmi";
 import { Loader2 } from "lucide-react";
+import { truncateAddress } from "@/lib/utils";
 
 export default function Transactions() {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export default function Transactions() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-display font-bold mb-1">Transaction History</h1>
+        <h1 className="text-white text-3xl font-display font-bold mb-1">Transaction History</h1>
         <p className="text-muted-foreground">View all your payment activity</p>
       </div>
 
@@ -92,7 +93,12 @@ export default function Transactions() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">
-                    {tx.to === address ? `From ${tx.from}` : `To ${tx.to}`}
+                    {tx.linkId ? "Payment Link" : tx.to === address ? `Received` : `Sent`}
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">
+                    {tx.to === address ? `From ${truncateAddress(tx.from)}` : `To ${truncateAddress(tx.to)}`}
                   </p>
                   <p className="text-sm text-muted-foreground">{new Date(tx.createdAt).toLocaleString()}</p>
                 </div>

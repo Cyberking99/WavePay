@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight, ArrowDownLeft, Link2, Eye, EyeOff, TrendingUp } from "lucide-react";
 import { USER } from "@/lib/constants";
-import { getFirstName, getTotalBalance } from "@/lib/utils";
+import { getFirstName, getTotalBalance, truncateAddress } from "@/lib/utils";
 import api from "@/lib/api";
 
 const recentTransactions = [
@@ -162,7 +162,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="font-medium">
-                    {tx.type === "received" ? `From ${tx.from}` : `To ${tx.to}`}
+                    {tx.type === "received" ? `From ${truncateAddress(tx.from)}` : `To ${truncateAddress(tx.to)}`}
                   </p>
                   <p className="text-sm text-muted-foreground">{tx.time}</p>
                 </div>
