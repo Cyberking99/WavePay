@@ -31,15 +31,29 @@ export const createTransaction = async (req: Request, res: Response) => {
 export const getTransactions = async (req: Request, res: Response) => {
     try {
         const address = req.user?.address;
-        const transactions = await Transaction.findAll({
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await Transaction.findAndCountAll({
             where: sequelize.or(
                 { from: address },
                 { to: address }
             ),
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
 
-        res.json({ success: true, transactions });
+        res.json({
+            success: true,
+            transactions: rows,
+            pagination: {
+                total: count,
+                page,
+                totalPages: Math.ceil(count / limit)
+            }
+        });
     } catch (error) {
         console.error('Fetch transactions error:', error);
         res.status(500).json({ error: 'Internal server error' });

@@ -33,7 +33,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await api.get("/transactions");
+        const response = await api.get("/transactions/?limit=5");
         if (response.data.success) {
           setRecentTransactions(response.data.transactions);
         }
