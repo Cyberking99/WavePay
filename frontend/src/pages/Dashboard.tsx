@@ -7,17 +7,12 @@ import { USER } from "@/lib/constants";
 import { getFirstName, getTotalBalance, truncateAddress } from "@/lib/utils";
 import api from "@/lib/api";
 
-const recentTransactions = [
-  { id: "1", type: "received", from: "@alice", amount: "250.00", time: "2 hours ago" },
-  { id: "2", type: "sent", to: "@bob", amount: "100.00", time: "5 hours ago" },
-  { id: "3", type: "received", from: "Payment Link", amount: "50.00", time: "1 day ago" },
-];
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [balance, setBalance] = useState("0.00");
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalSent: 0, totalReceived: 0, totalLinks: 0, totalTransactions: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,20 +26,27 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get("/transactions/?limit=5");
-        if (response.data.success) {
-          setRecentTransactions(response.data.transactions);
+        const [transactionsRes, statsRes] = await Promise.all([
+          api.get("/transactions/?limit=5"),
+          api.get("/user/stats")
+        ]);
+
+        if (transactionsRes.data.success) {
+          setRecentTransactions(transactionsRes.data.transactions);
+        }
+        if (statsRes.data.success) {
+          setStats(statsRes.data.stats);
         }
       } catch (error) {
-        console.error("Failed to fetch transactions:", error);
+        console.error("Failed to fetch dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTransactions();
+    fetchData();
   }, []);
 
   const filteredTransactions = recentTransactions.filter(
@@ -106,24 +108,46 @@ export default function Dashboard() {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-border">
-          <CardHeader className="pb-3">
-            <CardDescription>Active Links</CardDescription>
-            <CardTitle className="text-2xl font-display">12</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Links</CardTitle>
+            <Link2 className="h-4 w-4 text-primary" />
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalLinks}</div>
+            <p className="text-xs text-muted-foreground">Active payment links</p>
+          </CardContent>
         </Card>
         <Card className="border-border">
-          <CardHeader className="pb-3">
-            <CardDescription>This Month</CardDescription>
-            <CardTitle className="text-2xl font-display">$2,450</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalTransactions}</div>
+            <p className="text-xs text-muted-foreground">Lifetime transactions</p>
+          </CardContent>
         </Card>
         <Card className="border-border">
-          <CardHeader className="pb-3">
-            <CardDescription>Transactions</CardDescription>
-            <CardTitle className="text-2xl font-display">48</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${stats.totalSent.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Lifetime sent</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Received</CardTitle>
+            <ArrowDownLeft className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${stats.totalReceived.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Lifetime received</p>
+          </CardContent>
         </Card>
       </div>
 
