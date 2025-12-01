@@ -1,26 +1,60 @@
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
+import api from "@/lib/api";
+import { useAccount } from "wagmi";
+import { truncateAddress } from "@/lib/utils";
+import { CURRENT_NETWORK } from "@/lib/constants";
 
 export default function TransactionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { address } = useAccount();
+  const [transaction, setTransaction] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - in real app, fetch based on id
-  const transaction = {
-    id: id,
-    type: "received",
-    from: "@alice",
-    amount: "250.00",
-    time: "2024-01-20 14:30:45",
-    status: "completed",
-    method: "username",
-    txHash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-    fee: "0.50",
-    note: "Payment for consulting services - January 2024",
-  };
+  useEffect(() => {
+    const fetchTransaction = async () => {
+      try {
+        const response = await api.get(`/transactions/${id}`);
+        if (response.data.success) {
+          setTransaction(response.data.transaction);
+        }
+      } catch (error) {
+        console.error("Failed to fetch transaction:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchTransaction();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!transaction) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-4">Transaction Not Found</h2>
+        <Button onClick={() => navigate("/transactions")}>Back to Transactions</Button>
+      </div>
+    );
+  }
+
+  const isReceived = transaction.to === address;
+  const type = isReceived ? "received" : "sent";
+  const counterparty = isReceived ? transaction.from : transaction.to;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -42,7 +76,7 @@ export default function TransactionDetail() {
               </CardTitle>
               <CardDescription>Transaction ID: {transaction.id}</CardDescription>
             </div>
-            <Badge variant={transaction.status === "completed" ? "default" : "secondary"}>
+            <Badge variant={transaction.status === "confirmed" ? "default" : "secondary"}>
               {transaction.status}
             </Badge>
           </div>
@@ -51,9 +85,9 @@ export default function TransactionDetail() {
           {/* Amount */}
           <div className="text-center py-6 border-y border-border">
             <p className="text-sm text-muted-foreground mb-2">Amount</p>
-            <p className={`text-4xl font-display font-bold ${transaction.type === "received" ? "text-primary" : ""
+            <p className={`text-4xl font-display font-bold ${isReceived ? "text-green-500" : "text-red-500"
               }`}>
-              {transaction.type === "received" ? "+" : "-"}${transaction.amount}
+              {isReceived ? "+" : "-"}${transaction.amount}
             </p>
           </div>
 
@@ -62,37 +96,34 @@ export default function TransactionDetail() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Type</p>
-                <p className="font-medium capitalize">{transaction.type}</p>
+                <p className="font-medium capitalize">{transaction.linkId != null ? "Payment Link" : "Transfer"}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Method</p>
-                <p className="font-medium capitalize">{transaction.method}</p>
+                <p className="text-sm text-muted-foreground mb-1">Token</p>
+                <p className="font-medium uppercase">{transaction.token}</p>
               </div>
             </div>
 
             <div>
               <p className="text-sm text-muted-foreground mb-1">
-                {transaction.type === "received" ? "From" : "To"}
+                {isReceived ? "From" : "To"}
               </p>
               <p className="font-medium">
-                {transaction.type === "received" ? transaction.from : transaction.from}
+                {truncateAddress(counterparty)}
               </p>
             </div>
 
             <div>
               <p className="text-sm text-muted-foreground mb-1">Date & Time</p>
-              <p className="font-medium">{transaction.time}</p>
+              <p className="font-medium">{new Date(transaction.createdAt).toLocaleString()}</p>
             </div>
 
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Network Fee</p>
-              <p className="font-medium">${transaction.fee}</p>
-            </div>
-
-            {transaction.note && (
+            {transaction.transactionPayload && (
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Note</p>
-                <p className="font-medium">{transaction.note}</p>
+                <p className="text-sm text-muted-foreground mb-1">Payload</p>
+                <code className="text-xs bg-muted p-2 rounded block overflow-x-auto">
+                  {transaction.transactionPayload}
+                </code>
               </div>
             )}
 
@@ -100,12 +131,12 @@ export default function TransactionDetail() {
               <p className="text-sm text-muted-foreground mb-1">Transaction Hash</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs bg-muted p-2 rounded overflow-x-auto">
-                  {transaction.txHash}
+                  {transaction.hash}
                 </code>
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => window.open(`https://etherscan.io/tx/${transaction.txHash}`, "_blank")}
+                  onClick={() => window.open(`${CURRENT_NETWORK.blockExplorers?.default?.url}/tx/${transaction.hash}`, "_blank")}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>

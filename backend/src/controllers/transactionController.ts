@@ -59,3 +59,26 @@ export const getTransactions = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+export const getTransactionById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const address = req.user?.address;
+
+        const transaction = await Transaction.findByPk(id);
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'Transaction not found' });
+        }
+
+        // Ensure user is involved in the transaction
+        if (transaction.from !== address && transaction.to !== address) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        res.json({ success: true, transaction });
+    } catch (error) {
+        console.error('Fetch transaction error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
