@@ -27,7 +27,7 @@ export default function TransactionDetail() {
       <Button
         variant="ghost"
         onClick={() => navigate("/transactions")}
-        className="mb-6"
+        className="mb-6 bg-primary text-primary-foreground"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Transactions
@@ -51,9 +51,8 @@ export default function TransactionDetail() {
           {/* Amount */}
           <div className="text-center py-6 border-y border-border">
             <p className="text-sm text-muted-foreground mb-2">Amount</p>
-            <p className={`text-4xl font-display font-bold ${
-              transaction.type === "received" ? "text-primary" : ""
-            }`}>
+            <p className={`text-4xl font-display font-bold ${transaction.type === "received" ? "text-primary" : ""
+              }`}>
               {transaction.type === "received" ? "+" : "-"}${transaction.amount}
             </p>
           </div>

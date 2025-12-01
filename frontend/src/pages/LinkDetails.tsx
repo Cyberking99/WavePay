@@ -62,7 +62,7 @@ export default function LinkDetails() {
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                    <h1 className="text-3xl font-display font-bold">Link Report</h1>
+                    <h1 className="text-white text-3xl font-display font-bold">Link Report</h1>
                     <p className="text-muted-foreground">Detailed view and transaction history</p>
                 </div>
             </div>
@@ -155,7 +155,11 @@ export default function LinkDetails() {
                     ) : (
                         <div className="space-y-4">
                             {transactions.map((tx) => (
-                                <div key={tx.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                                <div
+                                    key={tx.id}
+                                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                                    onClick={() => navigate(`/transactions/${tx.id}`)}
+                                >
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                                             <CreditCard className="h-5 w-5 text-primary" />
