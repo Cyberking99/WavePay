@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowUpRight, ArrowDownLeft, Link2, Eye, EyeOff, TrendingUp } from "lucide-react";
 import { USER } from "@/lib/constants";
 import { getFirstName, getTotalBalance } from "@/lib/utils";
+import api from "@/lib/api";
 
 const recentTransactions = [
   { id: "1", type: "received", from: "@alice", amount: "250.00", time: "2 hours ago" },
@@ -16,6 +17,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [balance, setBalance] = useState("0.00");
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -26,6 +29,30 @@ export default function Dashboard() {
     };
     fetchBalance();
   }, []);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await api.get("/transactions");
+        if (response.data.success) {
+          setRecentTransactions(response.data.transactions);
+        }
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const filteredTransactions = recentTransactions.filter(
+    (tx) =>
+      tx.from ||
+      tx.to ||
+      tx.amount
+  );
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -116,7 +143,7 @@ export default function Dashboard() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          {recentTransactions.map((tx) => (
+          {filteredTransactions.map((tx) => (
             <div
               key={tx.id}
               className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-smooth cursor-pointer"

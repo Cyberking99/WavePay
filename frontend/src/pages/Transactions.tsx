@@ -1,67 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ArrowUpRight, ArrowDownLeft, Search, Link2 } from "lucide-react";
-
-const mockTransactions = [
-  {
-    id: "1",
-    type: "received",
-    from: "@alice",
-    amount: "250.00",
-    time: "2024-01-20 14:30",
-    status: "completed",
-    method: "username",
-  },
-  {
-    id: "2",
-    type: "sent",
-    to: "@bob",
-    amount: "100.00",
-    time: "2024-01-20 10:15",
-    status: "completed",
-    method: "username",
-  },
-  {
-    id: "3",
-    type: "received",
-    from: "Payment Link",
-    amount: "50.00",
-    time: "2024-01-19 18:45",
-    status: "completed",
-    method: "link",
-  },
-  {
-    id: "4",
-    type: "sent",
-    to: "0x742d...5e2a",
-    amount: "75.50",
-    time: "2024-01-19 12:20",
-    status: "completed",
-    method: "wallet",
-  },
-  {
-    id: "5",
-    type: "received",
-    from: "@charlie",
-    amount: "300.00",
-    time: "2024-01-18 09:00",
-    status: "completed",
-    method: "username",
-  },
-];
+import api from "@/lib/api";
+import { useAccount } from "wagmi";
+import { Loader2 } from "lucide-react";
 
 export default function Transactions() {
   const navigate = useNavigate();
+  const { address } = useAccount();
   const [searchQuery, setSearchQuery] = useState("");
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredTransactions = mockTransactions.filter(
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await api.get("/transactions");
+        if (response.data.success) {
+          setTransactions(response.data.transactions);
+        }
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const filteredTransactions = transactions.filter(
     (tx) =>
       tx.from?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.to?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.amount.includes(searchQuery)
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -96,13 +79,12 @@ export default function Transactions() {
             >
               <div className="flex items-center gap-4 flex-1">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    tx.type === "received" ? "bg-primary/10" : "bg-muted"
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${tx.to === address ? "bg-primary/10" : "bg-muted"
+                    }`}
                 >
-                  {tx.method === "link" ? (
+                  {tx.linkId ? (
                     <Link2 className="h-5 w-5 text-primary" />
-                  ) : tx.type === "received" ? (
+                  ) : tx.to === address ? (
                     <ArrowDownLeft className="h-5 w-5 text-primary" />
                   ) : (
                     <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
@@ -110,14 +92,14 @@ export default function Transactions() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">
-                    {tx.type === "received" ? `From ${tx.from}` : `To ${tx.to}`}
+                    {tx.to === address ? `From ${tx.from}` : `To ${tx.to}`}
                   </p>
-                  <p className="text-sm text-muted-foreground">{tx.time}</p>
+                  <p className="text-sm text-muted-foreground">{new Date(tx.createdAt).toLocaleString()}</p>
                 </div>
               </div>
               <div className="text-right ml-4">
-                <div className={`font-semibold ${tx.type === "received" ? "text-primary" : ""}`}>
-                  {tx.type === "received" ? "+" : "-"}${tx.amount}
+                <div className={`font-semibold ${tx.to === address ? "text-primary" : ""}`}>
+                  {tx.to === address ? "+" : "-"}${tx.amount}
                 </div>
                 <div className="text-xs text-muted-foreground capitalize">{tx.status}</div>
               </div>
