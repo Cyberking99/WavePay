@@ -45,6 +45,10 @@ export default function PaymentLinks() {
     toast.success("Link status updated");
   };
 
+  const isLinkActive = (link: any) => {
+    return link.type == "time-based" ? link.expiryDate > new Date().toISOString() && link.active == 1 : link.active == 1;
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -70,12 +74,12 @@ export default function PaymentLinks() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <CardTitle className="font-display text-xl">
-                      ${link.amount}
+                      {link.amount && `$${link.amount}`}
                       <Badge
-                        variant={link.active === 1 ? "default" : "destructive"}
+                        variant={isLinkActive(link) ? "default" : "destructive"}
                         className="ml-3"
                       >
-                        {link.active === 1 ? "Active" : "Inactive"}
+                        {isLinkActive(link) ? "Active" : "Inactive"}
                       </Badge>
                     </CardTitle>
                     <CardDescription className="text-base">
@@ -89,12 +93,12 @@ export default function PaymentLinks() {
                     <Button variant="ghost" size="icon" onClick={() => openLink(link.linkId)} title="Open link">
                       <ExternalLink className="h-4 w-4" />
                     </Button>
-                    {link.active === 1 && (
+                    {isLinkActive(link) && (
                       <Button
                         variant="outline"
                         size="icon"
                         onClick={() => toggleStatus(link.id)}
-                        title={link.active === 1 ? "Deactivate" : "Activate"}
+                        title={isLinkActive(link) ? "Deactivate" : "Activate"}
                       >
                         <Power className="h-4 w-4" />
                       </Button>
@@ -116,7 +120,7 @@ export default function PaymentLinks() {
                     <p className="text-muted-foreground mb-1">Created</p>
                     <p className="font-medium">{new Date(link.createdAt).toLocaleDateString()}</p>
                   </div>
-                  {link.expiry && (
+                  {link.type == "time-based" && link.expiry && (
                     <div>
                       <p className="text-muted-foreground mb-1">Expires</p>
                       <p className="font-medium">{new Date(link.expiryDate).toLocaleDateString()}</p>
