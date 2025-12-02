@@ -5,20 +5,26 @@ import KycService from '../services/KycService.js';
 export const addBankAccount = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as any).user.id;
-        const { bank_code, account_number, account_name } = req.body;
+        const { bank_code, account_number } = req.body;
 
-        if (!bank_code || !account_number || !account_name) {
+        if (!bank_code || !account_number) {
             res.status(400).json({ success: false, message: 'Missing required fields' });
             return;
         }
 
-
+        const verification = await KycService.verifyBankAccount(bank_code, account_number);
+        
+        if (!verification.success) {
+            res.status(400).json({ success: false, message: verification.message });
+            return;
+        }
 
         const bankAccount = await BankAccount.create({
             user_id: userId,
+            bank_name: verification?.data?.bank_name,
             bank_code,
             account_number,
-            account_name,
+            account_name: verification?.data?.account_name,
         });
 
         res.status(201).json({ success: true, message: 'Bank account added successfully', data: bankAccount });
