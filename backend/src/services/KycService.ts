@@ -154,6 +154,44 @@ export class KycService {
             };
         }
     }
+
+    async createBeneficiary(identityId: string, bankCode: string, accountNumber: string): Promise<BankVerificationResponse> {
+        try {
+            const response = await fetch(`${BREAD_API}/beneficiary`, {
+                method: 'POST',
+                headers: HEADERS,
+                body: JSON.stringify({
+                    currency: 'ngn',
+                    identity_id: identityId,
+                    details: {
+                        bank_code: bankCode,
+                        account_number: accountNumber,
+                    }
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                return {
+                    success: false,
+                    message: data.message || 'Failed to create beneficiary.',
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Beneficiary created successfully.',
+                data: data.data,
+            };
+        } catch (error: any) {
+            console.error('Beneficiary Creation Error:', error);
+            return {
+                success: false,
+                message: error.message || 'Beneficiary creation failed.',
+            };
+        }
+    }
 }
 
 export default new KycService();

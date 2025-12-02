@@ -42,6 +42,10 @@ BankAccount.init(
             type: DataTypes.STRING,
             allowNull: false,
         },
+        beneficiary_id: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
     },
     {
         sequelize,

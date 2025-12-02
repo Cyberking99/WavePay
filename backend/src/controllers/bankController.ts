@@ -13,9 +13,16 @@ export const addBankAccount = async (req: Request, res: Response): Promise<void>
         }
 
         const verification = await KycService.verifyBankAccount(bank_code, account_number);
-        
+
         if (!verification.success) {
             res.status(400).json({ success: false, message: verification.message });
+            return;
+        }
+
+        const beneficiary = await KycService.createBeneficiary((req as any).user.identityId, bank_code, account_number);
+
+        if (!beneficiary.success) {
+            res.status(400).json({ success: false, message: beneficiary.message });
             return;
         }
 
@@ -25,6 +32,7 @@ export const addBankAccount = async (req: Request, res: Response): Promise<void>
             bank_code,
             account_number,
             account_name: verification?.data?.account_name,
+            beneficiary_id: beneficiary?.data?.id,
         });
 
         res.status(201).json({ success: true, message: 'Bank account added successfully', data: bankAccount });

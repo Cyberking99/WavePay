@@ -34,6 +34,10 @@ export async function up(queryInterface, Sequelize) {
             type: Sequelize.STRING,
             allowNull: false
         },
+        beneficiary_id: {
+            type: Sequelize.STRING,
+            allowNull: false
+        },
         createdAt: {
             allowNull: false,
             type: Sequelize.DATE
