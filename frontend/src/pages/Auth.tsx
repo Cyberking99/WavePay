@@ -52,7 +52,8 @@ export default function Auth() {
             });
 
             setTimeout(() => {
-              if (response.data.isOnboarded) {
+              console.log(response.data);
+              if (response.data.isOnboarded == true) {
                 navigate(ROUTES.DASHBOARD);
               } else {
                 navigate(ROUTES.ONBOARDING);

@@ -6,6 +6,7 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Send from "./pages/Send";
+import Offramp from "./pages/Offramp";
 import CreateLink from "./pages/CreateLink";
 import PaymentLinks from "./pages/PaymentLinks";
 import LinkDetails from "./pages/LinkDetails";
@@ -29,6 +30,7 @@ const App = () => (
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/send" element={<Send />} />
+            <Route path="/offramp" element={<Offramp />} />
             <Route path="/links" element={<PaymentLinks />} />
             <Route path="/links/create" element={<CreateLink />} />
             <Route path="/links/:id" element={<LinkDetails />} />

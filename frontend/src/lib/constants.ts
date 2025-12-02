@@ -15,6 +15,7 @@ export const ROUTES = {
     ONBOARDING: "/onboarding",
     DASHBOARD: "/dashboard",
     SEND: "/send",
+    OFFRAMP: "/offramp",
     LINKS: "/links",
     LINKS_CREATE: "/links/create",
     TRANSACTIONS: "/transactions",
