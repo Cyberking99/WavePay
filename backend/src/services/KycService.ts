@@ -24,6 +24,29 @@ interface VerificationResponse {
     };
 }
 
+interface BankResponse {
+    success: boolean;
+    message: string;
+    data?: {
+        name: string;
+        code: string;
+        icon: string;
+        [key: string]: any;
+    }[];
+}
+
+interface BankVerificationResponse {
+    success: boolean;
+    message: string;
+    data?: {
+        bank_code: string;
+        bank_name: string;
+        account_number: string;
+        account_name: string;
+        [key: string]: any;
+    };
+}
+
 export class KycService {
     async verifyIdentity(type: 'bvn' | 'nin', name: string, number: string, dob: string): Promise<VerificationResponse> {
         try {
@@ -63,6 +86,71 @@ export class KycService {
             return {
                 success: false,
                 message: error.message || 'Identity verification failed.',
+            };
+        }
+    }
+
+    async getBanks(): Promise<BankResponse> {
+        try {
+            const response = await fetch(`${BREAD_API}/banks?currency=ngn`, {
+                method: 'GET',
+                headers: HEADERS
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                return {
+                    success: false,
+                    message: data.message || 'Failed to get banks.',
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Banks retrieved successfully.',
+                data: data.data,
+            };
+        } catch (error: any) {
+            console.error('Unable to retrieve banks:', error);
+            return {
+                success: false,
+                message: error.message || 'Banks retrieval failed.',
+            };
+        }
+    }
+
+    async verifyBankAccount(bankCode: string, accountNumber: string): Promise<BankVerificationResponse> {
+        try {
+            const response = await fetch(`${BREAD_API}/lookup`, {
+                method: 'POST',
+                headers: HEADERS,
+                body: JSON.stringify({
+                    bank_code: bankCode,
+                    currency: 'ngn',
+                    account_number: accountNumber,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                return {
+                    success: false,
+                    message: data.message || 'Failed to verify bank account.',
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Bank account verified successfully.',
+                data: data.data,
+            };
+        } catch (error: any) {
+            console.error('Bank Verification Error:', error);
+            return {
+                success: false,
+                message: error.message || 'Bank account verification failed.',
             };
         }
     }

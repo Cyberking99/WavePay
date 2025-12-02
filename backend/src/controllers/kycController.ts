@@ -4,6 +4,43 @@ import UserKyc from '../models/UserKyc.js';
 import UserDetails from '../models/UserDetails.js';
 import KycService from '../services/KycService.js';
 
+
+export const getBanks = async (req: Request, res: Response): Promise<void> => {
+    try {
+
+        const banks = await KycService.getBanks();
+
+        res.status(200).json({ success: true, data: banks });
+    } catch (error: any) {
+        console.error('Error fetching banks:', error);
+        res.status(500).json({ success: false, message: error.message || 'Internal server error' });
+    }
+}
+
+export const verifyBankAccount = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { bank_code, account_number } = req.body;
+
+        if (!bank_code || !account_number) {
+            res.status(400).json({ success: false, message: 'Missing required fields' });
+            return;
+        }
+
+        const verification = await KycService.verifyBankAccount(bank_code, account_number);
+
+        if (!verification.success) {
+            res.status(400).json({ success: false, message: verification.message });
+            return;
+        }
+
+        res.status(200).json({ success: true, data: verification.data });
+    } catch (error: any) {
+        console.error('Error verifying bank account:', error);
+        res.status(500).json({ success: false, message: error.message || 'Internal server error' });
+    }
+};
+
+
 export const submitKyc = async (req: Request, res: Response): Promise<void> => {
     try {
         const { dob, identity_type, identity_number } = req.body;

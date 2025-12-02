@@ -13,8 +13,6 @@ import { Plus, X, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { CustomField, FieldType } from "@/lib/types";
 
-
-
 export default function CreateLink() {
   const navigate = useNavigate();
   const [linkType, setLinkType] = useState<"one-time" | "time-based" | "public">("one-time");

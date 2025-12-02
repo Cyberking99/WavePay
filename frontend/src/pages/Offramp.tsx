@@ -2,27 +2,37 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import api from "@/lib/api";
 import KycForm from "@/components/KycForm";
+import AddBankAccountForm from "@/components/AddBankAccountForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Offramp() {
     const [loading, setLoading] = useState(true);
     const [kycStatus, setKycStatus] = useState<"inactive" | "pending" | "approved" | "rejected" | null>(null);
+    const [hasBankAccount, setHasBankAccount] = useState(false);
 
-    const fetchKycStatus = async () => {
+    const fetchData = async () => {
         try {
-            const response = await api.get("/kyc/status");
-            if (response.data.success) {
-                setKycStatus(response.data.kyc_status);
+            const [kycRes, bankRes] = await Promise.all([
+                api.get("/kyc/status"),
+                api.get("/bank-accounts")
+            ]);
+
+            if (kycRes.data.success) {
+                setKycStatus(kycRes.data.kyc_status);
+            }
+
+            if (bankRes.data.success && bankRes.data.data.length > 0) {
+                setHasBankAccount(true);
             }
         } catch (error) {
-            console.error("Failed to fetch KYC status:", error);
+            console.error("Failed to fetch data:", error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchKycStatus();
+        fetchData();
     }, []);
 
     if (loading) {
@@ -54,15 +64,17 @@ export default function Offramp() {
                     )}
 
                     {(!kycStatus || kycStatus === "inactive" || kycStatus === 'rejected') && (
-                        <KycForm onSuccess={fetchKycStatus} />
+                        <KycForm onSuccess={fetchData} />
                     )}
                 </div>
+            ) : !hasBankAccount ? (
+                <AddBankAccountForm onSuccess={() => setHasBankAccount(true)} />
             ) : (
                 <Card>
                     <CardHeader>
                         <CardTitle>Offramp Service</CardTitle>
                         <CardDescription>
-                            You are verified! You can now proceed to offramp your funds.
+                            You are verified and have a bank account linked! You can now proceed to offramp your funds.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

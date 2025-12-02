@@ -7,3 +7,9 @@ export interface CustomField {
     required: boolean;
     options?: string[];
 }
+
+export interface Bank {
+    name: string;
+    code: string;
+    icon: string;
+}
