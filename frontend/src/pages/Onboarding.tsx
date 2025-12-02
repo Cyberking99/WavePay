@@ -29,7 +29,7 @@ export default function Onboarding() {
       const address = localStorage.getItem("wavepay_address");
 
       const response = await axios.post(
-        `${API_URL}/user/onboard`,
+        `${API_URL}/users/onboard`,
         formData,
         {
           headers: {

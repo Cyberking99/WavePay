@@ -75,7 +75,7 @@ export default function Send() {
 
     try {
       // Lookup user
-      const response = await api.get(`/user/lookup/${usernameData.username.replace('@', '')}`);
+      const response = await api.get(`/users/lookup/${usernameData.username.replace('@', '')}`);
       const recipient = response.data.user;
 
       if (!recipient || !recipient.address) {

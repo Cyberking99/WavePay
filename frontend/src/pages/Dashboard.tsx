@@ -30,7 +30,7 @@ export default function Dashboard() {
       try {
         const [transactionsRes, statsRes] = await Promise.all([
           api.get("/transactions/?limit=5"),
-          api.get("/user/stats")
+          api.get("/users/stats")
         ]);
 
         if (transactionsRes.data.success) {

@@ -9,9 +9,9 @@ export async function up(queryInterface, Sequelize) {
    * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
    */
   await queryInterface.addColumn('users', 'kyc_status', {
-    type: Sequelize.ENUM('pending', 'approved', 'rejected'),
+    type: Sequelize.ENUM('inactive', 'pending', 'approved', 'rejected'),
     allowNull: false,
-    defaultValue: 'pending'
+    defaultValue: 'inactive'
   });
 }
 

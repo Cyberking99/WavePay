@@ -1,5 +1,6 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { verifyMessage } from 'viem';
+import User from '../models/User.js';
 
 const AUTH_MESSAGE = "Authenticate with WavePay";
 
@@ -9,6 +10,7 @@ declare global {
         interface Request {
             user?: {
                 address: string;
+                id?: number;
             };
         }
     }
@@ -21,22 +23,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         if (!signature) {
             return res.status(401).json({ error: 'Missing API key (signature)' });
         }
-
-        const valid = await verifyMessage({
-            address: req.headers['x-wallet-address'] as `0x${string}`, // We might need the address too if we can't recover it easily without context, but verifyMessage usually takes address + message + signature to return boolean, OR recoverMessageAddress takes message + signature.
-            // Wait, verifyMessage signature: { address, message, signature } -> boolean.
-            // So we need the user to send their address too, or we recover it.
-            // Let's use recoverMessageAddress to get the address from the signature and message.
-            // Actually, verifyMessage is safer if we expect the user to claim an address.
-            // Let's require x-wallet-address header as well for verification.
-            message: AUTH_MESSAGE,
-            signature: signature as `0x${string}`,
-        });
-
-        // Wait, verifyMessage needs the address to verify AGAINST.
-        // If we want to just recover the address, we use recoverMessageAddress.
-        // But usually we want to know who the user claims to be.
-        // Let's assume the client sends 'x-wallet-address'.
 
         const address = req.headers['x-wallet-address'] as string;
 
@@ -54,7 +40,11 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             return res.status(401).json({ error: 'Invalid signature' });
         }
 
-        req.user = { address };
+        const user = await User.findOne({ where: { address } });
+        req.user = {
+            address,
+            ...(user?.id ? { id: user.id } : {})
+        };
         next();
     } catch (error) {
         console.error('Auth error:', error);

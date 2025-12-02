@@ -7,6 +7,7 @@ class User extends Model {
     declare public fullName: string;
     declare public username: string;
     declare public isOnboarded: boolean;
+    declare public kyc_status: 'inactive' | 'pending' | 'approved' | 'rejected';
 }
 
 User.init(
@@ -33,6 +34,10 @@ User.init(
         isOnboarded: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
+        },
+        kyc_status: {
+            type: DataTypes.ENUM('inactive', 'pending', 'approved', 'rejected'),
+            defaultValue: 'inactive',
         },
     },
     {
