@@ -11,16 +11,16 @@ export default function Offramp() {
     const [loading, setLoading] = useState(true);
     const [kycStatus, setKycStatus] = useState<"inactive" | "pending" | "approved" | "rejected" | null>(null);
     const [hasBankAccount, setHasBankAccount] = useState(false);
-    const [selectedToken, setSelectedToken] = useState("cUSD");
+    const [selectedToken, setSelectedToken] = useState("USDC");
     const [amount, setAmount] = useState("");
-
-    const RATE = 1500; // Mock rate for now
+    const [rate, setRate] = useState<number>(0);
 
     const fetchData = async () => {
         try {
-            const [kycRes, bankRes] = await Promise.all([
+            const [kycRes, bankRes, rateRes] = await Promise.all([
                 api.get("/kyc/status"),
-                api.get("/bank-accounts")
+                api.get("/bank-accounts"),
+                api.get("/offramp/rate")
             ]);
 
             if (kycRes.data.success) {
@@ -29,6 +29,11 @@ export default function Offramp() {
 
             if (bankRes.data.success && bankRes.data.data.length > 0) {
                 setHasBankAccount(true);
+            }
+            
+            console.log(rateRes.data);
+            if (rateRes.data.success && rateRes.data.data?.success) {
+                setRate(rateRes.data.data.data.rate);
             }
         } catch (error) {
             console.error("Failed to fetch data:", error);
@@ -122,12 +127,12 @@ export default function Offramp() {
                         <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Exchange Rate</span>
-                                <span>1 {selectedToken} = {RATE.toLocaleString()} NGN</span>
+                                <span>1 {selectedToken} = {rate.toLocaleString()} NGN</span>
                             </div>
                             <div className="flex justify-between text-sm font-medium">
                                 <span>You Receive</span>
                                 <span className="text-primary">
-                                    {amount ? (parseFloat(amount) * RATE).toLocaleString() : "0.00"} NGN
+                                    {amount ? (parseFloat(amount) * rate).toLocaleString() : "0.00"} NGN
                                 </span>
                             </div>
                         </div>

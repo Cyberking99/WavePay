@@ -47,6 +47,25 @@ interface BankVerificationResponse {
     };
 }
 
+interface BeneficiaryResponse {
+    success: boolean;
+    message: string;
+    data?: {
+        id: string;
+        [key: string]: any;
+    };
+}
+
+interface RateResponse {
+    success: boolean;
+    message: string;
+    data?: {
+        expiry: string;
+        rate: number;
+        [key: string]: any;
+    };
+}
+
 export class KycService {
     async verifyIdentity(type: 'bvn' | 'nin', name: string, number: string, dob: string): Promise<VerificationResponse> {
         try {
@@ -155,7 +174,7 @@ export class KycService {
         }
     }
 
-    async createBeneficiary(identityId: string, bankCode: string, accountNumber: string): Promise<BankVerificationResponse> {
+    async createBeneficiary(identityId: string, bankCode: string, accountNumber: string): Promise<BeneficiaryResponse> {
         try {
             const response = await fetch(`${BREAD_API}/beneficiary`, {
                 method: 'POST',
@@ -189,6 +208,41 @@ export class KycService {
             return {
                 success: false,
                 message: error.message || 'Beneficiary creation failed.',
+            };
+        }
+    }
+
+    async getRate(): Promise<RateResponse> {
+        try {
+            const response = await fetch(`${BREAD_API}/quote/offramp`, {
+                method: 'POST',
+                headers: HEADERS,
+                body: JSON.stringify({
+                    currency: 'ngn',
+                    amount: 1,
+                    asset: 'base:usdc',
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                return {
+                    success: false,
+                    message: data.message || 'Failed to get rate.',
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Rate retrieved successfully.',
+                data: data.data,
+            };
+        } catch (error: any) {
+            console.error('Rate Retrieval Error:', error);
+            return {
+                success: false,
+                message: error.message || 'Rate retrieval failed.',
             };
         }
     }

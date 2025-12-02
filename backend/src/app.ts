@@ -6,6 +6,7 @@ import transactionRoutes from './routes/transactionRoutes.js';
 import linkRoutes from './routes/linkRoutes.js';
 import kycRoutes from './routes/kycRoutes.js';
 import bankRoutes from './routes/bankRoutes.js';
+import offrampRoutes from './routes/offrampRoutes.js';
 
 const app = express();
 
@@ -22,5 +23,6 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/links', linkRoutes);
 app.use('/api/kyc', kycRoutes);
 app.use('/api/bank-accounts', bankRoutes);
+app.use('/api/offramp', offrampRoutes);
 
 export default app;
