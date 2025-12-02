@@ -1,15 +1,25 @@
 import type { Request, Response } from 'express';
 import User from '../models/User.js';
 import UserKyc from '../models/UserKyc.js';
+import UserDetails from '../models/UserDetails.js';
+import KycService from '../services/KycService.js';
 
 export const submitKyc = async (req: Request, res: Response): Promise<void> => {
     try {
         const { dob, identity_type, identity_number } = req.body;
-        const userId = (req as any).user.id;
+        const address = (req as any).user.address;
+
         if (!dob || !identity_type || !identity_number) {
             res.status(400).json({ success: false, message: 'Missing required fields' });
             return;
         }
+
+        const user = await User.findOne({ where: { address } });
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+        const userId = user.id;
 
         const existingKyc = await UserKyc.findOne({ where: { user_id: userId } });
         if (existingKyc) {
@@ -26,10 +36,44 @@ export const submitKyc = async (req: Request, res: Response): Promise<void> => {
         });
 
         await User.update({ kyc_status: 'pending' }, { where: { id: userId } });
-        res.status(200).json({ success: true, message: 'KYC submitted successfully' });
-    } catch (error) {
+
+        const verification = await KycService.verifyIdentity(
+            identity_type,
+            user.fullName,
+            identity_number,
+            dob
+        );
+
+        if (!verification.success || !verification.data) {
+            await User.update({ kyc_status: 'rejected' }, { where: { id: userId } });
+
+            res.status(400).json({ success: false, message: verification.message });
+            return;
+        }
+
+        await User.update({ kyc_status: 'approved' }, { where: { id: userId } });
+
+        const userDetails = await UserDetails.findOne({ where: { user_id: userId } });
+        if (userDetails) {
+            userDetails.identityId = verification.data.id;
+            await userDetails.save();
+        } else {
+
+            const uniqueUserId = Date.now().toString();
+
+            await UserDetails.create({
+                user_id: userId,
+                userId: uniqueUserId,
+                identityId: verification.data.id,
+                email: null
+            });
+        }
+
+        res.status(200).json({ success: true, message: 'KYC submitted and verified successfully', data: verification.data });
+
+    } catch (error: any) {
         console.error('Error submitting KYC:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
+        res.status(500).json({ success: false, message: error.message || 'Internal server error' });
     }
 };
 
