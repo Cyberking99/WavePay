@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import api from "@/lib/api";
 import KycForm from "@/components/KycForm";
@@ -14,13 +14,31 @@ export default function Offramp() {
     const [selectedToken, setSelectedToken] = useState("USDC");
     const [amount, setAmount] = useState("");
     const [rate, setRate] = useState<number>(0);
+    const [expiry, setExpiry] = useState<string | null>(null);
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+    const [isRefreshingRate, setIsRefreshingRate] = useState(false);
+
+    const fetchRate = useCallback(async () => {
+        if (isRefreshingRate) return;
+        setIsRefreshingRate(true);
+        try {
+            const rateRes = await api.get("/offramp/rate");
+            if (rateRes.data.success && rateRes.data.data?.success) {
+                setRate(rateRes.data.data.data.rate);
+                setExpiry(rateRes.data.data.data.expiry);
+            }
+        } catch (error) {
+            console.error("Failed to fetch rate:", error);
+        } finally {
+            setIsRefreshingRate(false);
+        }
+    }, [isRefreshingRate]);
 
     const fetchData = async () => {
         try {
-            const [kycRes, bankRes, rateRes] = await Promise.all([
+            const [kycRes, bankRes] = await Promise.all([
                 api.get("/kyc/status"),
-                api.get("/bank-accounts"),
-                api.get("/offramp/rate")
+                api.get("/bank-accounts")
             ]);
 
             if (kycRes.data.success) {
@@ -30,11 +48,8 @@ export default function Offramp() {
             if (bankRes.data.success && bankRes.data.data.length > 0) {
                 setHasBankAccount(true);
             }
-            
-            console.log(rateRes.data);
-            if (rateRes.data.success && rateRes.data.data?.success) {
-                setRate(rateRes.data.data.data.rate);
-            }
+
+            await fetchRate();
         } catch (error) {
             console.error("Failed to fetch data:", error);
         } finally {
@@ -45,6 +60,26 @@ export default function Offramp() {
     useEffect(() => {
         fetchData();
     }, []);
+
+    useEffect(() => {
+        if (!expiry) return;
+
+        const updateTimer = () => {
+            const now = new Date().getTime();
+            const expiryTime = new Date(expiry).getTime();
+            const diff = Math.floor((expiryTime - now) / 1000);
+
+            setTimeLeft(diff);
+
+            if (diff <= 0) {
+                fetchRate();
+            }
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [expiry, fetchRate]);
 
     if (loading) {
         return (
@@ -127,7 +162,14 @@ export default function Offramp() {
                         <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Exchange Rate</span>
-                                <span>1 {selectedToken} = {rate.toLocaleString()} NGN</span>
+                                <div className="flex items-center gap-2">
+                                    <span>1 {selectedToken} = {rate.toLocaleString()} NGN</span>
+                                    {timeLeft > 0 && (
+                                        <span className={`text-xs ${timeLeft <= 8 ? "text-red-500 font-bold" : "text-muted-foreground"}`}>
+                                            (Refreshes in {timeLeft}s)
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                             <div className="flex justify-between text-sm font-medium">
                                 <span>You Receive</span>
@@ -139,9 +181,16 @@ export default function Offramp() {
 
                         <button
                             className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
-                            disabled={!amount || parseFloat(amount) <= 0}
+                            disabled={!amount || parseFloat(amount) <= 0 || timeLeft <= 8 || isRefreshingRate}
                         >
-                            Proceed to Offramp
+                            {timeLeft <= 8 || isRefreshingRate ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Refreshing Rate...
+                                </>
+                            ) : (
+                                "Proceed to Offramp"
+                            )}
                         </button>
                     </CardContent>
                 </Card>
