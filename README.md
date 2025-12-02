@@ -19,7 +19,7 @@ This project is built with a modern tech stack ensuring performance and scalabil
 -   **Frontend**: [React](https://react.dev/), [Vite](https://vitejs.dev/), [TypeScript](https://www.typescriptlang.org/)
 -   **Styling**: [Tailwind CSS](https://tailwindcss.com/), [Shadcn UI](https://ui.shadcn.com/)
 -   **State Management**: [TanStack Query](https://tanstack.com/query/latest)
--   **Web3 & Auth**: [Privy](https://www.privy.io/), [Wagmi](https://wagmi.sh/)
+-   **Web3 & Auth**: [Reown Appkit](https://docs.reown.com/), [Wagmi](https://wagmi.sh/)
 
 ## Getting Started
 
