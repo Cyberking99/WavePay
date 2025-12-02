@@ -4,11 +4,17 @@ import api from "@/lib/api";
 import KycForm from "@/components/KycForm";
 import AddBankAccountForm from "@/components/AddBankAccountForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TOKENS } from "@/lib/constants";
 
 export default function Offramp() {
     const [loading, setLoading] = useState(true);
     const [kycStatus, setKycStatus] = useState<"inactive" | "pending" | "approved" | "rejected" | null>(null);
     const [hasBankAccount, setHasBankAccount] = useState(false);
+    const [selectedToken, setSelectedToken] = useState("cUSD");
+    const [amount, setAmount] = useState("");
+
+    const RATE = 1500; // Mock rate for now
 
     const fetchData = async () => {
         try {
@@ -74,13 +80,64 @@ export default function Offramp() {
                     <CardHeader>
                         <CardTitle>Offramp Service</CardTitle>
                         <CardDescription>
-                            You are verified and have a bank account linked! You can now proceed to offramp your funds.
+                            Convert your crypto to fiat instantly.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-center py-8 text-muted-foreground">
-                            Offramp functionality coming soon...
-                        </p>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Select Token</label>
+                            <Select value={selectedToken} onValueChange={setSelectedToken}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select token" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {TOKENS.map((token) => (
+                                        <SelectItem key={token.symbol} value={token.symbol}>
+                                            <div className="flex items-center gap-2">
+                                                <img src={token.logo} alt={token.name} className="w-4 h-4" />
+                                                {token.symbol}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Amount</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="0.00"
+                                />
+                                <div className="absolute right-3 top-2.5 text-sm text-muted-foreground">
+                                    {selectedToken}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Exchange Rate</span>
+                                <span>1 {selectedToken} = {RATE.toLocaleString()} NGN</span>
+                            </div>
+                            <div className="flex justify-between text-sm font-medium">
+                                <span>You Receive</span>
+                                <span className="text-primary">
+                                    {amount ? (parseFloat(amount) * RATE).toLocaleString() : "0.00"} NGN
+                                </span>
+                            </div>
+                        </div>
+
+                        <button
+                            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+                            disabled={!amount || parseFloat(amount) <= 0}
+                        >
+                            Proceed to Offramp
+                        </button>
                     </CardContent>
                 </Card>
             )}
