@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Loader2, CheckCircle2, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ interface AddBankAccountFormProps {
 export default function AddBankAccountForm({ onSuccess }: AddBankAccountFormProps) {
     const [loading, setLoading] = useState(false);
     const [verifying, setVerifying] = useState(false);
+    const [isRetrying, setIsRetrying] = useState(false);
     const [formData, setFormData] = useState({
         bank_code: "",
         account_number: "",
@@ -25,21 +26,23 @@ export default function AddBankAccountForm({ onSuccess }: AddBankAccountFormProp
     const [banks, setBanks] = useState<Bank[]>();
     const [verifiedName, setVerifiedName] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchBanks = async () => {
-            try {
-                const response = await api.get("/kyc/banks");
-                if (response.data.success) {
-                    setBanks(response.data.data.data);
-                    console.log(banks)
-                }
-                console.log("Data", response.data.data)
-            } catch (error) {
-                console.error("Failed to fetch banks:", error);
+    const fetchBanks = useCallback(async () => {
+        setIsRetrying(true);
+        try {
+            const response = await api.get("/kyc/banks");
+            if (response.data.success) {
+                setBanks(response.data.data.data);
             }
-        };
-        fetchBanks();
+        } catch (error) {
+            console.error("Failed to fetch banks:", error);
+        } finally {
+            setIsRetrying(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchBanks();
+    }, [fetchBanks]);
 
     const handleVerify = async () => {
         if (!formData.bank_code || !formData.account_number) return;
@@ -92,7 +95,7 @@ export default function AddBankAccountForm({ onSuccess }: AddBankAccountFormProp
     };
 
     const handleBankChange = (code: string) => {
-        const bank = banks.find(b => b.code === code);
+        const bank = banks?.find(b => b.code === code);
         setFormData(prev => ({
             ...prev,
             bank_code: code,
@@ -122,7 +125,20 @@ export default function AddBankAccountForm({ onSuccess }: AddBankAccountFormProp
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="bank_code">Bank</Label>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="bank_code">Bank</Label>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={fetchBanks}
+                                disabled={isRetrying}
+                            >
+                                <RefreshCcw className={`h-3 w-3 ${isRetrying ? "animate-spin" : ""}`} />
+                                <span className="sr-only">Retry fetching banks</span>
+                            </Button>
+                        </div>
                         <Select
                             value={formData.bank_code}
                             onValueChange={handleBankChange}
