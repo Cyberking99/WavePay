@@ -1,12 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, CheckCircle2, RefreshCcw } from "lucide-react";
+import { Loader2, CheckCircle2, RefreshCcw, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/api";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bank } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface AddBankAccountFormProps {
     onSuccess: () => void;
@@ -16,6 +29,7 @@ export default function AddBankAccountForm({ onSuccess }: AddBankAccountFormProp
     const [loading, setLoading] = useState(false);
     const [verifying, setVerifying] = useState(false);
     const [isRetrying, setIsRetrying] = useState(false);
+    const [open, setOpen] = useState(false);
     const [formData, setFormData] = useState({
         bank_code: "",
         account_number: "",
@@ -103,6 +117,7 @@ export default function AddBankAccountForm({ onSuccess }: AddBankAccountFormProp
             account_name: "" // Reset verified name on change
         }));
         setVerifiedName(null);
+        setOpen(false);
     };
 
     const handleAccountNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,31 +154,50 @@ export default function AddBankAccountForm({ onSuccess }: AddBankAccountFormProp
                                 <span className="sr-only">Retry fetching banks</span>
                             </Button>
                         </div>
-                        <Select
-                            value={formData.bank_code}
-                            onValueChange={handleBankChange}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a bank" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {banks?.length === 0 && (
-                                    <SelectItem value="" disabled>
-                                        <span className="text-sm text-muted-foreground">
-                                            No banks found
-                                        </span>
-                                    </SelectItem>
-                                )}
-                                {banks?.map((bank) => (
-                                    <SelectItem key={bank.code} value={bank.code}>
-                                        <div className="flex items-center gap-2">
-                                            <img src={bank.icon} alt="" className="w-4 h-4" />
-                                            {bank.name}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+
+                        <Popover open={open} onOpenChange={setOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={open}
+                                    className="w-full justify-between"
+                                >
+                                    {formData.bank_code
+                                        ? banks?.find((bank) => bank.code === formData.bank_code)?.name
+                                        : "Select bank..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <Command>
+                                    <CommandInput placeholder="Search bank..." />
+                                    <CommandList>
+                                        <CommandEmpty>No bank found.</CommandEmpty>
+                                        <CommandGroup>
+                                            {banks?.map((bank) => (
+                                                <CommandItem
+                                                    key={bank.code}
+                                                    value={bank.name}
+                                                    onSelect={() => handleBankChange(bank.code)}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            formData.bank_code === bank.code ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                    />
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={bank.icon} alt="" className="w-4 h-4" />
+                                                        {bank.name}
+                                                    </div>
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="account_number">Account Number</Label>
