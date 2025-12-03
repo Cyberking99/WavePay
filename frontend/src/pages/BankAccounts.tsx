@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, Building2 } from "lucide-react";
+import { Trash2, Building2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import AddBankAccountForm from "@/components/AddBankAccountForm";
 
 interface BankAccount {
     id: number;
@@ -16,6 +22,7 @@ interface BankAccount {
 export default function BankAccounts() {
     const [accounts, setAccounts] = useState<BankAccount[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     useEffect(() => {
         fetchAccounts();
@@ -48,6 +55,12 @@ export default function BankAccounts() {
         }
     };
 
+    const handleAddSuccess = () => {
+        setIsAddModalOpen(false);
+        toast.success("Bank account added successfully");
+        fetchAccounts();
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -59,6 +72,17 @@ export default function BankAccounts() {
                         Manage your connected bank accounts
                     </p>
                 </div>
+                <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Add Account
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <AddBankAccountForm onSuccess={handleAddSuccess} />
+                    </DialogContent>
+                </Dialog>
             </div>
 
             {loading ? (
@@ -80,6 +104,10 @@ export default function BankAccounts() {
                         <p className="text-muted-foreground mb-4">
                             Add a bank account to start withdrawing funds
                         </p>
+                        <Button onClick={() => setIsAddModalOpen(true)} variant="outline" className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Add Account
+                        </Button>
                     </CardContent>
                 </Card>
             ) : (
