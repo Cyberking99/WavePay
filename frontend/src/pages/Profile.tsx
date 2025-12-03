@@ -10,11 +10,13 @@ import { USER, ROUTES } from "@/lib/constants";
 import { getInitials } from "@/lib/utils";
 import { useDisconnect } from "wagmi";
 import { useNavigate } from "react-router-dom";
+import api from "@/lib/api";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { disconnect } = useDisconnect();
 
+  const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
     fullName: USER?.fullName,
     username: USER?.username,
@@ -22,8 +24,26 @@ export default function Profile() {
     email: USER?.email,
   });
 
-  const handleSave = () => {
-    toast.success("Profile updated successfully!");
+  const handleSave = async () => {
+    if (!profile.email) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.put(`/users/update`, {
+        email: profile.email,
+      });
+
+      localStorage.setItem("wavepay_user", JSON.stringify(response.data.user));
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDisconnect = () => {
@@ -91,9 +111,16 @@ export default function Profile() {
           <Button
             onClick={handleSave}
             className="w-full gradient-primary hover:opacity-90 transition-smooth"
+            disabled={loading}
           >
-            <User className="mr-2 h-4 w-4" />
-            Save Changes
+            {loading ? (
+              "Saving..."
+            ) : (
+              <>
+                <User className="mr-2 h-4 w-4" />
+                Save Changes
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>
