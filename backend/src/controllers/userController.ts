@@ -115,7 +115,12 @@ export const updateUser = async (req: Request, res: Response) => {
 
         const userDetails = await UserDetails.findOne({ where: { user_id: user.id } });
         if (!userDetails) {
-            return res.status(404).json({ error: 'User details not found' });
+            return res.status(404).json({ error: 'User details not found. Please complete your KYC first.' });
+        }
+
+        const emailExist = await UserDetails.findOne({ where: { email } });
+        if (emailExist) {
+            return res.status(400).json({ error: 'Email already exists' });
         }
 
         userDetails.email = email;
@@ -124,8 +129,8 @@ export const updateUser = async (req: Request, res: Response) => {
         const userInfo = {
             id: user.id,
             address: user.address,
-            name: user.fullName,
-            phone: user.username,
+            fullName: user.fullName,
+            username: user.username,
             isOnboarded: user.isOnboarded,
             email: userDetails?.email,
         };
