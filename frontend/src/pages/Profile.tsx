@@ -19,6 +19,7 @@ export default function Profile() {
     fullName: USER?.fullName,
     username: USER?.username,
     walletAddress: USER?.address,
+    email: USER?.userDetails?.email,
   });
 
   const handleSave = () => {
@@ -74,6 +75,15 @@ export default function Profile() {
                 value={profile.username}
                 onChange={(e) => setProfile({ ...profile, username: e.target.value })}
                 disabled
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                value={profile.email}
+                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
               />
             </div>
           </div>
