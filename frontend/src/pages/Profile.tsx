@@ -19,7 +19,7 @@ export default function Profile() {
     fullName: USER?.fullName,
     username: USER?.username,
     walletAddress: USER?.address,
-    email: USER?.userDetails?.email,
+    email: USER?.email,
   });
 
   const handleSave = () => {

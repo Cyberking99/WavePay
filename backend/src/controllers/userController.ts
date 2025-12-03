@@ -1,5 +1,6 @@
 import { type Request, type Response } from 'express';
 import User from '../models/User.js';
+import UserDetails from '../models/UserDetails.js';
 import Transaction from '../models/Transaction.js';
 import Link from '../models/Link.js';
 import sequelize from '../config/database.js';
@@ -94,6 +95,44 @@ export const getUserStats = async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error('Get stats error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+export const updateUser = async (req: Request, res: Response) => {
+    try {
+        const address = req.user?.address;
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        const user = await User.findOne({ where: { address } });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userDetails = await UserDetails.findOne({ where: { user_id: user.id } });
+        if (!userDetails) {
+            return res.status(404).json({ error: 'User details not found' });
+        }
+
+        userDetails.email = email;
+        await userDetails.save();
+
+        const userInfo = {
+            id: user.id,
+            address: user.address,
+            name: user.fullName,
+            phone: user.username,
+            isOnboarded: user.isOnboarded,
+            email: userDetails?.email,
+        };
+
+        res.json({ success: true, user: userInfo });
+    } catch (error) {
+        console.error('Update user error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
