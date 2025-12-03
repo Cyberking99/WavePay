@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { Home, Send, Link2, DollarSign, History, User, Menu, X, Building2 } from "lucide-react";
+import { Home, Send, Link2, DollarSign, History, User, Menu, X, Building2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { APP_NAME, USER, ROUTES } from "@/lib/constants";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
+import { useDisconnect } from "wagmi";
 
 const navigation = [
   { name: "Dashboard", href: ROUTES.DASHBOARD, icon: Home },
@@ -19,6 +21,7 @@ const navigation = [
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { disconnect } = useDisconnect();
   const location = useLocation();
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
@@ -40,6 +43,12 @@ export default function AppLayout() {
   if (!USER) {
     return <Navigate to={ROUTES.ONBOARDING} replace />;
   }
+
+  const handleDisconnect = () => {
+    toast.success("Wallet disconnected");
+    disconnect();
+    navigate(ROUTES.AUTH);
+  };
 
   return (
     <div className="min-h-screen bg-background dark">
@@ -97,6 +106,17 @@ export default function AppLayout() {
                 </button>
               );
             })}
+            <button
+              key="logout"
+              onClick={handleDisconnect}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-smooth",
+                "text-sidebar-foreground hover:bg-sidebar-accent/50"
+              )}
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Logout</span>
+            </button>
           </nav>
         </div>
       </aside>
