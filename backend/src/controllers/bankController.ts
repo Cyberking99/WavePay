@@ -53,3 +53,24 @@ export const getBankAccounts = async (req: Request, res: Response): Promise<void
         res.status(500).json({ success: false, message: error.message || 'Internal server error' });
     }
 };
+
+export const deleteBankAccount = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).user.id;
+        const { id } = req.params;
+
+        const bankAccount = await BankAccount.findOne({ where: { id, user_id: userId } });
+
+        if (!bankAccount) {
+            res.status(404).json({ success: false, message: 'Bank account not found' });
+            return;
+        }
+
+        await bankAccount.destroy();
+
+        res.status(200).json({ success: true, message: 'Bank account deleted successfully' });
+    } catch (error: any) {
+        console.error('Error deleting bank account:', error);
+        res.status(500).json({ success: false, message: error.message || 'Internal server error' });
+    }
+};
