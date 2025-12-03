@@ -21,6 +21,7 @@ export const ROUTES = {
     TRANSACTIONS: "/transactions",
     TRANSACTION_DETAIL: "/transactions/:id",
     PROFILE: "/profile",
+    BANK_ACCOUNTS: "/bank-accounts",
 }
 
 export const TOKEN_LOGOS = {

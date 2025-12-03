@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { Home, Send, Link2, DollarSign, History, User, Menu, X } from "lucide-react";
+import { Home, Send, Link2, DollarSign, History, User, Menu, X, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { APP_NAME, USER, ROUTES } from "@/lib/constants";
@@ -12,6 +12,7 @@ const navigation = [
   { name: "Payment Links", href: ROUTES.LINKS, icon: Link2 },
   { name: "Offramp", href: ROUTES.OFFRAMP, icon: DollarSign },
   { name: "Transactions", href: ROUTES.TRANSACTIONS, icon: History },
+  { name: "Bank Accounts", href: ROUTES.BANK_ACCOUNTS, icon: Building2 },
   { name: "Profile", href: ROUTES.PROFILE, icon: User },
 ];
 
