@@ -9,6 +9,16 @@ import {
     DialogContent,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import AddBankAccountForm from "@/components/AddBankAccountForm";
 
 interface BankAccount {
@@ -23,6 +33,7 @@ export default function BankAccounts() {
     const [accounts, setAccounts] = useState<BankAccount[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchAccounts();
@@ -42,9 +53,11 @@ export default function BankAccounts() {
         }
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async () => {
+        if (!deleteId) return;
+
         try {
-            const response = await api.delete(`/bank-accounts/${id}`);
+            const response = await api.delete(`/bank-accounts/${deleteId}`);
             if (response.data.success) {
                 toast.success("Bank account deleted successfully");
                 fetchAccounts();
@@ -52,6 +65,8 @@ export default function BankAccounts() {
         } catch (error) {
             console.error("Error deleting bank account:", error);
             toast.error("Failed to delete bank account");
+        } finally {
+            setDeleteId(null);
         }
     };
 
@@ -84,6 +99,24 @@ export default function BankAccounts() {
                     </DialogContent>
                 </Dialog>
             </div>
+
+            <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your bank account
+                            from our servers.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Continue
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {loading ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -132,7 +165,7 @@ export default function BankAccounts() {
                                         variant="destructive"
                                         size="icon"
                                         className="h-8 w-8"
-                                        onClick={() => handleDelete(account.id)}
+                                        onClick={() => setDeleteId(account.id)}
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
