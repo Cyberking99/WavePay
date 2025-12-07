@@ -7,9 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TOKENS } from "@/lib/constants";
 
+interface BankAccount {
+    id: number;
+    bank_name: string;
+    account_number: string;
+    bank_code: string;
+}
+
 export default function Offramp() {
     const [loading, setLoading] = useState(true);
     const [kycStatus, setKycStatus] = useState<"inactive" | "pending" | "approved" | "rejected" | null>(null);
+    const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+    const [selectedBankAccount, setSelectedBankAccount] = useState<string>("");
     const [hasBankAccount, setHasBankAccount] = useState(false);
     const [selectedToken, setSelectedToken] = useState("USDC");
     const [amount, setAmount] = useState("");
@@ -46,7 +55,11 @@ export default function Offramp() {
             }
 
             if (bankRes.data.success && bankRes.data.data.length > 0) {
+                setBankAccounts(bankRes.data.data);
                 setHasBankAccount(true);
+                if (!selectedBankAccount) {
+                    setSelectedBankAccount(bankRes.data.data[0].id.toString());
+                }
             }
 
             await fetchRate();
@@ -136,6 +149,25 @@ export default function Offramp() {
                                             <div className="flex items-center gap-2">
                                                 <img src={token.logo} alt={token.name} className="w-4 h-4" />
                                                 {token.symbol}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Select Bank Account</label>
+                            <Select value={selectedBankAccount} onValueChange={setSelectedBankAccount}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select bank account" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {bankAccounts.map((account) => (
+                                        <SelectItem key={account.id} value={account.id.toString()}>
+                                            <div className="flex flex-col items-start">
+                                                <span className="font-medium">{account.bank_name}</span>
+                                                <span className="text-xs text-muted-foreground">{account.account_number}</span>
                                             </div>
                                         </SelectItem>
                                     ))}
