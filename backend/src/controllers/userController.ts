@@ -104,6 +104,7 @@ export const updateUser = async (req: Request, res: Response) => {
     try {
         const address = req.user?.address;
         const { email } = req.body;
+        let isNew = false;
 
         if (!email) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -119,10 +120,12 @@ export const updateUser = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'User details not found. Please complete your KYC first.' });
         }
 
-        const emailExist = await UserDetails.findOne({ where: { email } });
+        const emailExist = await UserDetails.findOne({ where: { email, user_id: !user.id } });
         if (emailExist) {
             return res.status(400).json({ error: 'Email already exists' });
         }
+
+        isNew = !userDetails.email;
 
         userDetails.email = email;
         await userDetails.save();
@@ -138,8 +141,7 @@ export const updateUser = async (req: Request, res: Response) => {
 
         res.json({ success: true, user: userInfo });
 
-        // Send welcome email
-        if (userDetails.email) {
+        if (userDetails.email && isNew) {
             await EmailService.sendWelcomeEmail(userDetails.email, user.fullName || user.username);
         }
     } catch (error) {
