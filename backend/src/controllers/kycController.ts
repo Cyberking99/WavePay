@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import User from '../models/User.js';
 import UserKyc from '../models/UserKyc.js';
 import UserDetails from '../models/UserDetails.js';
+import Wallet from '../models/Wallet.js';
 import KycService from '../services/KycService.js';
 
 
@@ -94,6 +95,23 @@ export const submitKyc = async (req: Request, res: Response): Promise<void> => {
         if (userDetails) {
             userDetails.identityId = verification.data.id;
             await userDetails.save();
+
+            const wallet = await KycService.createWallet(userDetails.userId);
+            if (!wallet.success || !wallet.data) {
+                await User.update({ kyc_status: 'rejected' }, { where: { id: userId } });
+
+                res.status(400).json({ success: false, message: wallet.message });
+                return;
+            }
+
+            await Wallet.create({
+                user_id: userId,
+                wallet_id: wallet.data.wallet_id,
+                wallet_reference: wallet.data.reference,
+                type: "evm",
+                wallet_address: wallet.data.address.evm,
+                auto_offramp: false
+            });
         } else {
 
             const uniqueUserId = Date.now().toString();
@@ -103,6 +121,23 @@ export const submitKyc = async (req: Request, res: Response): Promise<void> => {
                 userId: uniqueUserId,
                 identityId: verification.data.id,
                 email: null
+            });
+
+            const wallet = await KycService.createWallet(uniqueUserId);
+            if (!wallet.success || !wallet.data) {
+                await User.update({ kyc_status: 'rejected' }, { where: { id: userId } });
+
+                res.status(400).json({ success: false, message: wallet.message });
+                return;
+            }
+
+            await Wallet.create({
+                user_id: userId,
+                wallet_id: wallet.data.wallet_id,
+                wallet_reference: wallet.data.reference,
+                type: "evm",
+                wallet_address: wallet.data.address.evm,
+                auto_offramp: false
             });
         }
 

@@ -66,6 +66,15 @@ interface RateResponse {
     };
 }
 
+interface WalletResponse {
+    success: boolean;
+    message: string;
+    data?: {
+        id: string;
+        [key: string]: any;
+    };
+}
+
 export class KycService {
     async verifyIdentity(type: 'bvn' | 'nin', name: string, number: string, dob: string): Promise<VerificationResponse> {
         try {
@@ -208,6 +217,39 @@ export class KycService {
             return {
                 success: false,
                 message: error.message || 'Beneficiary creation failed.',
+            };
+        }
+    }
+
+    async createWallet(reference: string): Promise<WalletResponse> {
+        try {
+            const response = await fetch(`${BREAD_API}/wallet`, {
+                method: 'POST',
+                headers: HEADERS,
+                body: JSON.stringify({
+                    reference,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                return {
+                    success: false,
+                    message: data.message || 'Failed to create wallet.',
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Wallet created successfully.',
+                data: data.data,
+            };
+        } catch (error: any) {
+            console.error('Wallet Creation Error:', error);
+            return {
+                success: false,
+                message: error.message || 'Wallet creation failed.',
             };
         }
     }
