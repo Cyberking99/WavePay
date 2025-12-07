@@ -75,6 +75,15 @@ interface WalletResponse {
     };
 }
 
+interface OfframpResponse {
+    success: boolean;
+    message: string;
+    data?: {
+        id: string;
+        [key: string]: any;
+    };
+}
+
 export class KycService {
     async verifyIdentity(type: 'bvn' | 'nin', name: string, number: string, dob: string): Promise<VerificationResponse> {
         try {
@@ -285,6 +294,42 @@ export class KycService {
             return {
                 success: false,
                 message: error.message || 'Rate retrieval failed.',
+            };
+        }
+    }
+
+    async offramp(amount: number, wallet_id: string, beneficiary_id: string, asset: string): Promise<OfframpResponse> {
+        try {
+            const response = await fetch(`${BREAD_API}/offramp`, {
+                method: 'POST',
+                headers: HEADERS,
+                body: JSON.stringify({
+                    amount,
+                    wallet_id,
+                    beneficiary_id,
+                    asset,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                return {
+                    success: false,
+                    message: data.message || 'Failed to offramp.',
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Offramp successful.',
+                data: data.data,
+            };
+        } catch (error: any) {
+            console.error('Offramp Error:', error);
+            return {
+                success: false,
+                message: error.message || 'Offramp failed.',
             };
         }
     }

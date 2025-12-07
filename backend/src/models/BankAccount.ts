@@ -9,6 +9,7 @@ class BankAccount extends Model {
     declare public bank_name: string;
     declare public account_number: string;
     declare public account_name: string;
+    declare public beneficiary_id: string;
 }
 
 BankAccount.init(

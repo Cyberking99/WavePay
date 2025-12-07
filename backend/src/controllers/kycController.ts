@@ -157,7 +157,16 @@ export const getKycStatus = async (req: Request, res: Response): Promise<void> =
             res.status(404).json({ success: false, message: 'User not found' });
             return;
         }
-        res.status(200).json({ success: true, kyc_status: (user as any).kyc_status });
+
+        let walletAddress = null;
+        if ((user as any).kyc_status === 'approved') {
+            const wallet = await Wallet.findOne({ where: { user_id: userId } });
+            if (wallet) {
+                walletAddress = wallet.wallet_address;
+            }
+        }
+
+        res.status(200).json({ success: true, kyc_status: (user as any).kyc_status, wallet_address: walletAddress });
     } catch (error) {
         console.error('Error fetching KYC status:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });

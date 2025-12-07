@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Loader2 } from "lucide-react";
+import { useSendTransaction, useWaitForTransactionReceipt, useAccount } from "wagmi";
+import { parseUnits, type Address, erc20Abi, encodeFunctionData } from "viem";
 import api from "@/lib/api";
 import KycForm from "@/components/KycForm";
 import AddBankAccountForm from "@/components/AddBankAccountForm";
@@ -39,6 +41,14 @@ export default function Offramp() {
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [isRefreshingRate, setIsRefreshingRate] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+    const { address: userAddress } = useAccount();
+    const { sendTransactionAsync, isPending: isSending } = useSendTransaction();
+    const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
+    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+        hash: txHash,
+    });
 
     const fetchRate = useCallback(async () => {
         if (isRefreshingRate) return;
@@ -65,6 +75,9 @@ export default function Offramp() {
 
             if (kycRes.data.success) {
                 setKycStatus(kycRes.data.kyc_status);
+                if (kycRes.data.wallet_address) {
+                    setWalletAddress(kycRes.data.wallet_address);
+                }
             }
 
             if (bankRes.data.success && bankRes.data.data.length > 0) {
@@ -106,6 +119,35 @@ export default function Offramp() {
         const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
     }, [expiry, fetchRate]);
+
+    useEffect(() => {
+        const processOfframp = async () => {
+            if (isConfirmed && txHash) {
+                try {
+                    const res = await api.post("/offramp", {
+                        token: selectedToken,
+                        amount: parseFloat(amount),
+                        bank_id: parseInt(selectedBankAccount),
+                        tx_hash: txHash // Sending tx hash for reference if needed
+                    });
+
+                    if (res.data.success) {
+                        toast.success("Offramp initiated successfully!");
+                        setShowConfirmation(false);
+                        setAmount("");
+                        setTxHash(undefined);
+                    } else {
+                        toast.error(res.data.message || "Offramp failed");
+                    }
+                } catch (error: any) {
+                    console.error("Offramp API failed:", error);
+                    toast.error(error.response?.data?.message || "Offramp API failed");
+                }
+            }
+        };
+
+        processOfframp();
+    }, [isConfirmed, txHash, selectedToken, amount, selectedBankAccount]);
 
     if (loading) {
         return (
@@ -276,24 +318,57 @@ export default function Offramp() {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                            disabled={timeLeft <= 8}
-                            onClick={(e) => {
+                            disabled={timeLeft <= 8 || isSending || isConfirming}
+                            onClick={async (e) => {
                                 if (timeLeft <= 8) {
                                     e.preventDefault();
                                     return;
                                 }
+                                e.preventDefault(); // Prevent closing modal immediately
 
-                                console.log("Processing offramp...");
-                                setTimeout(() => {
-                                    toast.success("Offramp successful!");
-                                    setShowConfirmation(false);
-                                }, 2000);
+                                if (!walletAddress) {
+                                    toast.error("Wallet address not found. Please contact support.");
+                                    return;
+                                }
+
+                                try {
+                                    const token = TOKENS.find(t => t.symbol === selectedToken);
+                                    if (!token) throw new Error("Token not found");
+
+                                    const amountBigInt = parseUnits(amount, 6); // Assuming 6 decimals for USDC/cUSD
+
+                                    // Encode transfer function call
+                                    const data = encodeFunctionData({
+                                        abi: erc20Abi,
+                                        functionName: 'transfer',
+                                        args: [walletAddress as Address, amountBigInt]
+                                    });
+
+                                    const hash = await sendTransactionAsync({
+                                        to: token.address as Address,
+                                        data: data,
+                                    });
+
+                                    setTxHash(hash);
+                                    toast.info("Transaction sent. Waiting for confirmation...");
+
+                                    // Wait for confirmation is handled by useWaitForTransactionReceipt hook
+                                    // We will watch for isConfirmed in a useEffect to proceed
+                                } catch (error: any) {
+                                    console.error("Transfer failed:", error);
+                                    toast.error(error.message || "Transfer failed");
+                                }
                             }}
                         >
                             {timeLeft <= 8 || isRefreshingRate ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     Refreshing Rate...
+                                </>
+                            ) : isSending || isConfirming ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Processing...
                                 </>
                             ) : (
                                 "Confirm"
