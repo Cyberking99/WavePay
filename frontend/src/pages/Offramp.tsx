@@ -5,6 +5,16 @@ import KycForm from "@/components/KycForm";
 import AddBankAccountForm from "@/components/AddBankAccountForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { TOKENS } from "@/lib/constants";
 
 interface BankAccount {
@@ -26,6 +36,7 @@ export default function Offramp() {
     const [expiry, setExpiry] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [isRefreshingRate, setIsRefreshingRate] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
 
     const fetchRate = useCallback(async () => {
         if (isRefreshingRate) return;
@@ -214,6 +225,7 @@ export default function Offramp() {
                         <button
                             className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
                             disabled={!amount || parseFloat(amount) <= 0 || timeLeft <= 8 || isRefreshingRate}
+                            onClick={() => setShowConfirmation(true)}
                         >
                             {timeLeft <= 8 || isRefreshingRate ? (
                                 <>
@@ -227,6 +239,50 @@ export default function Offramp() {
                     </CardContent>
                 </Card>
             )}
+
+            <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Transaction</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Please review your transaction details before proceeding.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Amount to Offramp</span>
+                            <span className="font-medium">{amount} {selectedToken}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Exchange Rate</span>
+                            <span className="font-medium">1 {selectedToken} = {rate.toLocaleString()} NGN</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Amount to Receive</span>
+                            <span className="font-medium text-primary">{(parseFloat(amount || "0") * rate).toLocaleString()} NGN</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Destination Bank</span>
+                            <span className="font-medium text-right">
+                                {bankAccounts.find(b => b.id.toString() === selectedBankAccount)?.bank_name}<br />
+                                <span className="text-xs text-muted-foreground">
+                                    {bankAccounts.find(b => b.id.toString() === selectedBankAccount)?.account_number}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                            // TODO: Implement offramp logic
+                            console.log("Processing offramp...");
+                            setShowConfirmation(false);
+                        }}>
+                            Confirm & Process
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
