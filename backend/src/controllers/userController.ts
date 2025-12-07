@@ -5,6 +5,7 @@ import Transaction from '../models/Transaction.js';
 import Link from '../models/Link.js';
 import sequelize from '../config/database.js';
 import { Op } from 'sequelize';
+import EmailService from '../services/EmailService.js';
 
 export const getMe = (req: Request, res: Response) => {
     res.json({ user: req.user });
@@ -136,6 +137,11 @@ export const updateUser = async (req: Request, res: Response) => {
         };
 
         res.json({ success: true, user: userInfo });
+
+        // Send welcome email
+        if (userDetails.email) {
+            await EmailService.sendWelcomeEmail(userDetails.email, user.fullName || user.username);
+        }
     } catch (error) {
         console.error('Update user error:', error);
         res.status(500).json({ error: 'Internal server error' });
