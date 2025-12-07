@@ -16,6 +16,8 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { TOKENS } from "@/lib/constants";
+import { toast } from "sonner";
+import { setTimeout } from "timers";
 
 interface BankAccount {
     id: number;
@@ -233,7 +235,7 @@ export default function Offramp() {
                                     Refreshing Rate...
                                 </>
                             ) : (
-                                "Proceed to Offramp"
+                                "Proceed"
                             )}
                         </button>
                     </CardContent>
@@ -273,12 +275,29 @@ export default function Offramp() {
                     </div>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => {
-                            // TODO: Implement offramp logic
-                            console.log("Processing offramp...");
-                            setShowConfirmation(false);
-                        }}>
-                            Confirm & Process
+                        <AlertDialogAction
+                            disabled={timeLeft <= 8}
+                            onClick={(e) => {
+                                if (timeLeft <= 8) {
+                                    e.preventDefault();
+                                    return;
+                                }
+
+                                console.log("Processing offramp...");
+                                setTimeout(() => {
+                                    toast.success("Offramp successful!");
+                                    setShowConfirmation(false);
+                                }, 2000);
+                            }}
+                        >
+                            {timeLeft <= 8 || isRefreshingRate ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Refreshing Rate...
+                                </>
+                            ) : (
+                                "Confirm"
+                            )}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
