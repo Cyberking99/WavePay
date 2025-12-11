@@ -25,7 +25,7 @@ export const createTransaction = async (req: Request, res: Response) => {
         });
 
         // Send debit email notification
-        if (type === 'transfer' || type === 'payment') {
+        if (type === 'send') {
             const user = await User.findOne({ where: { address: from } });
             if (user) {
                 const userDetails = await UserDetails.findOne({ where: { user_id: user.id } });
