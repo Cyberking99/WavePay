@@ -60,7 +60,7 @@ class EmailService {
             });
 
             await this.transporter.sendMail({
-                from: process.env.SMTP_FROM,
+                from: `${process.env.SMTP_FROM} <${process.env.SMTP_USER}>`,
                 to,
                 subject: 'Transaction Alert: Money Sent',
                 html,
