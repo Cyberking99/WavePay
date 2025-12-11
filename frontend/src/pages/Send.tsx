@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUpRight, User, Wallet } from "lucide-react";
+import { ArrowUpRight, User, Wallet, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { APP_NAME, TOKENS, USDC_ABI } from "@/lib/constants";
 import api from "@/lib/api";
@@ -21,6 +21,8 @@ export default function Send() {
   const [selectedMethod, setSelectedMethod] = useState("username");
   const [lastTransaction, setLastTransaction] = useState<any>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [verifiedRecipient, setVerifiedRecipient] = useState<any>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const { address: userAddress } = useAccount();
   const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
@@ -77,6 +79,29 @@ export default function Send() {
     }
   }, [writeError]);
 
+  const handleVerifyUsername = async () => {
+    if (!usernameData.username) return;
+
+    setIsVerifying(true);
+    setVerifiedRecipient(null);
+
+    try {
+      const response = await api.get(`/users/lookup/${usernameData.username.replace('@', '')}`);
+      const recipient = response.data.user;
+
+      if (recipient && recipient.address) {
+        setVerifiedRecipient(recipient);
+      } else {
+        toast.error("User not found");
+      }
+    } catch (error) {
+      toast.error("User not found");
+      setVerifiedRecipient(null);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
 
   const handleSendByUsername = async (e: React.FormEvent) => {
     setSelectedMethod("username");
@@ -85,8 +110,13 @@ export default function Send() {
 
     try {
       // Lookup user
-      const response = await api.get(`/users/lookup/${usernameData.username.replace('@', '')}`);
-      const recipient = response.data.user;
+      let recipient = verifiedRecipient;
+
+      if (!recipient) {
+        // Fallback if somehow they bypassed verification (shouldn't happen with disabled button)
+        const response = await api.get(`/users/lookup/${usernameData.username.replace('@', '')}`);
+        recipient = response.data.user;
+      }
 
       if (!recipient || !recipient.address) {
         toast.error("User not found");
@@ -171,15 +201,34 @@ export default function Send() {
               <form onSubmit={handleSendByUsername} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    placeholder="@username"
-                    value={usernameData.username}
-                    onChange={(e) =>
-                      setUsernameData({ ...usernameData, username: e.target.value })
-                    }
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="username"
+                      placeholder="@username"
+                      value={usernameData.username}
+                      onChange={(e) => {
+                        setUsernameData({ ...usernameData, username: e.target.value });
+                        setVerifiedRecipient(null);
+                      }}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleVerifyUsername}
+                      disabled={isVerifying || !usernameData.username}
+                    >
+                      {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify"}
+                    </Button>
+                  </div>
+
+                  {verifiedRecipient && (
+                    <div className="flex items-center gap-2 text-sm text-green-500">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Verified: {verifiedRecipient.fullName || verifiedRecipient.username}</span>
+                    </div>
+                  )}
+
                   <p className="text-xs text-muted-foreground">
                     Enter the recipient's {APP_NAME} username
                   </p>
@@ -229,7 +278,7 @@ export default function Send() {
                 <Button
                   type="submit"
                   className="w-full h-11 gradient-primary hover:opacity-90 transition-smooth"
-                  disabled={isSending}
+                  disabled={isSending || !verifiedRecipient}
                 >
                   {isSending ? (
                     "Sending..."
