@@ -9,6 +9,7 @@ export const API_URL = import.meta.env.VITE_API_URL || "https://wavepay.onrender
 export const SUPPORTED_NETWORKS: [AppKitNetwork, ...AppKitNetwork[]] = [baseSepolia]
 export const DEFAULT_NETWORK = baseSepolia;
 export const CURRENT_NETWORK = localStorage.getItem("wavepay_network") ? JSON.parse(localStorage.getItem("wavepay_network")!) : DEFAULT_NETWORK;
+export const EXPLORER_URL = "https://sepolia.basescan.org";
 export const USER = localStorage.getItem("wavepay_user") ? JSON.parse(localStorage.getItem("wavepay_user")!) : null;
 export const ROUTES = {
     AUTH: "/",

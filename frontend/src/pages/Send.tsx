@@ -11,6 +11,7 @@ import { APP_NAME, TOKENS, USDC_ABI } from "@/lib/constants";
 import api from "@/lib/api";
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
 import { parseUnits, isAddress, parseAbi } from "viem";
+import { TransactionReceipt } from "@/components/TransactionReceipt";
 
 export default function Send() {
   const [usernameData, setUsernameData] = useState({ username: "", amount: "" });
@@ -18,6 +19,8 @@ export default function Send() {
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
   const [isSending, setIsSending] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState("username");
+  const [lastTransaction, setLastTransaction] = useState<any>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const { address: userAddress } = useAccount();
   const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
@@ -36,10 +39,6 @@ export default function Send() {
 
   useEffect(() => {
     if (isConfirmed) {
-      toast.success("Payment sent successfully!", {
-        description: `$${walletData.amount} sent to wallet`,
-      });
-
       // Save transaction to database
       api.post('/transactions', {
         hash,
@@ -48,7 +47,18 @@ export default function Send() {
         amount: walletData.amount,
         token: selectedToken.symbol,
         type: 'send'
-      }).catch(err => console.error("Failed to save transaction:", err));
+      }).then(response => {
+        if (response.data.success) {
+          setLastTransaction(response.data.transaction);
+          setShowReceipt(true);
+        }
+      }).catch(err => {
+        console.error("Failed to save transaction:", err);
+        // Fallback toast if saving fails
+        toast.success("Payment sent successfully!", {
+          description: `$${walletData.amount} sent to wallet`,
+        });
+      });
 
       if (selectedMethod == "username") {
         setUsernameData({ username: "", amount: "" });
@@ -311,6 +321,12 @@ export default function Send() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+
+      <TransactionReceipt
+        open={showReceipt}
+        onClose={() => setShowReceipt(false)}
+        transaction={lastTransaction}
+      />
+    </div >
   );
 }
