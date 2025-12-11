@@ -1,5 +1,8 @@
 import { type Request, type Response } from 'express';
 import Transaction from '../models/Transaction.js';
+import User from '../models/User.js';
+import UserDetails from '../models/UserDetails.js';
+import EmailService from '../services/EmailService.js';
 import sequelize from '../config/database.js';
 
 export const createTransaction = async (req: Request, res: Response) => {
@@ -20,6 +23,24 @@ export const createTransaction = async (req: Request, res: Response) => {
             status: 'confirmed',
             linkId: linkId || null
         });
+
+        // Send debit email notification
+        if (type === 'transfer' || type === 'payment') {
+            const user = await User.findOne({ where: { address: from } });
+            if (user) {
+                const userDetails = await UserDetails.findOne({ where: { user_id: user.id } });
+                if (userDetails && userDetails.email) {
+                    await EmailService.sendDebitEmail(
+                        userDetails.email,
+                        user.fullName || user.username,
+                        amount,
+                        token,
+                        to,
+                        new Date().toLocaleString()
+                    );
+                }
+            }
+        }
 
         res.json({ success: true, transaction });
     } catch (error) {

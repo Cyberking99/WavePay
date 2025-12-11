@@ -48,6 +48,29 @@ class EmailService {
             console.error('Error sending welcome email:', error);
         }
     }
+
+    async sendDebitEmail(to: string, name: string, amount: string, token: string, recipient: string, date: string): Promise<void> {
+        try {
+            const html = await this.compileTemplate('debit_notification', {
+                name,
+                amount,
+                token,
+                recipient,
+                date,
+            });
+
+            await this.transporter.sendMail({
+                from: process.env.SMTP_FROM,
+                to,
+                subject: 'Transaction Alert: Money Sent',
+                html,
+            });
+
+            console.log(`Debit email sent to ${to}`);
+        } catch (error) {
+            console.error('Error sending debit email:', error);
+        }
+    }
 }
 
 export default new EmailService();
