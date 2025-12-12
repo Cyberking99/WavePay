@@ -9,7 +9,7 @@ import { ArrowUpRight, User, Wallet, CheckCircle2, XCircle, Loader2 } from "luci
 import { toast } from "sonner";
 import { APP_NAME, TOKENS, USDC_ABI } from "@/lib/constants";
 import api from "@/lib/api";
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useEnsAddress } from "wagmi";
 import { parseUnits, isAddress, parseAbi } from "viem";
 import { TransactionReceipt } from "@/components/TransactionReceipt";
 
@@ -29,6 +29,11 @@ export default function Send() {
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
+  });
+
+  const { data: ensAddress, isLoading: isResolvingEns } = useEnsAddress({
+    name: walletData.address.endsWith('.eth') ? walletData.address : undefined,
+    chainId: 84532, // Base Sepolia
   });
 
   useEffect(() => {
@@ -151,10 +156,12 @@ export default function Send() {
       return;
     }
 
-    if (!isAddress(walletData.address)) {
-      toast.error("Invalid wallet address");
+    if (!isAddress(walletData.address) && !ensAddress) {
+      toast.error("Invalid wallet address or Basename");
       return;
     }
+
+    const recipientAddress = ensAddress || walletData.address;
 
     try {
       const amount = parseUnits(walletData.amount, selectedToken.decimals);
@@ -163,7 +170,7 @@ export default function Send() {
         address: selectedToken.address as `0x${string}`,
         abi: parseAbi(USDC_ABI),
         functionName: 'transfer',
-        args: [walletData.address as `0x${string}`, amount],
+        args: [recipientAddress as `0x${string}`, amount],
       });
 
     } catch (error) {
@@ -193,7 +200,7 @@ export default function Send() {
               </TabsTrigger>
               <TabsTrigger value="wallet" className="gap-2">
                 <Wallet className="h-4 w-4" />
-                Wallet Address
+                Wallet / Basename
               </TabsTrigger>
             </TabsList>
 
@@ -295,18 +302,33 @@ export default function Send() {
             <TabsContent value="wallet">
               <form onSubmit={handleSendByWallet} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="address">Wallet Address</Label>
-                  <Input
-                    id="address"
-                    placeholder="0x..."
-                    value={walletData.address}
-                    onChange={(e) =>
-                      setWalletData({ ...walletData, address: e.target.value })
-                    }
-                    required
-                  />
+                  <Label htmlFor="address">Wallet Address or Basename</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="address"
+                      placeholder="0x... or name.base.eth"
+                      value={walletData.address}
+                      onChange={(e) =>
+                        setWalletData({ ...walletData, address: e.target.value })
+                      }
+                      required
+                    />
+                    {isResolvingEns && (
+                      <div className="flex items-center justify-center px-3">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+
+                  {ensAddress && (
+                    <div className="flex items-center gap-2 text-sm text-green-500">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Resolved: {ensAddress.slice(0, 6)}...{ensAddress.slice(-4)}</span>
+                    </div>
+                  )}
+
                   <p className="text-xs text-muted-foreground">
-                    Enter the recipient's blockchain wallet address
+                    Enter the recipient's wallet address or Basename (e.g., name.base.eth)
                   </p>
                 </div>
 
