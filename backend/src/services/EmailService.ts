@@ -71,6 +71,29 @@ class EmailService {
             console.error('Error sending debit email:', error);
         }
     }
+
+    async sendOfframpEmail(to: string, name: string, amount: string, token: string, bankAccount: string, date: string): Promise<void> {
+        try {
+            const html = await this.compileTemplate('offramp_notification', {
+                name,
+                amount,
+                token,
+                bankAccount,
+                date,
+            });
+
+            await this.transporter.sendMail({
+                from: `${process.env.SMTP_FROM} <${process.env.SMTP_USER}>`,
+                to,
+                subject: 'Transaction Alert: Offramp Initiated',
+                html,
+            });
+
+            console.log(`Offramp email sent to ${to}`);
+        } catch (error) {
+            console.error('Error sending offramp email:', error);
+        }
+    }
 }
 
 export default new EmailService();

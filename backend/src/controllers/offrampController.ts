@@ -3,6 +3,9 @@ import KycService from '../services/KycService.js';
 import BankAccount from '../models/BankAccount.js';
 import Wallet from '../models/Wallet.js';
 import Transaction from '../models/Transaction.js';
+import User from '../models/User.js';
+import UserDetails from '../models/UserDetails.js';
+import EmailService from '../services/EmailService.js';
 
 
 export const getRate = async (req: Request, res: Response): Promise<void> => {
@@ -55,6 +58,21 @@ export const offramp = async (req: Request, res: Response): Promise<void> => {
             status: 'success',
             transactionPayload: JSON.stringify(offramp)
         });
+
+        // Send offramp email notification
+        const userDetails = await UserDetails.findOne({ where: { user_id: user.id } });
+        const userModel = await User.findByPk(user.id);
+
+        if (userDetails && userDetails.email && userModel) {
+            await EmailService.sendOfframpEmail(
+                userDetails.email,
+                userModel.fullName || userModel.username,
+                amount.toString(),
+                token,
+                `${bank.bank_name} - ${bank.account_number.slice(-4)}`,
+                new Date().toLocaleString()
+            );
+        }
 
         res.status(200).json({ success: true, data: offramp });
     } catch (error: any) {
