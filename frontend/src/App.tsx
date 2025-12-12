@@ -17,6 +17,7 @@ import AppLayout from "./components/layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 import Pay from "./pages/Pay";
 import BankAccounts from "./pages/BankAccounts";
+import Swap from "./pages/Swap";
 import { ContextProvider } from "@/config";
 
 const App = () => (
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/transactions/:id" element={<TransactionDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/bank-accounts" element={<BankAccounts />} />
+            <Route path="/swap" element={<Swap />} />
           </Route>
           <Route path="/pay/:id" element={<Pay />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
