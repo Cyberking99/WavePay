@@ -1,6 +1,6 @@
 import { viemClient } from "./config";
-import { parseAbi, formatUnits, parseUnits } from "viem";
-import { TOKENS, SWAP_ROUTER_ADDRESS, SWAP_ROUTER_ABI, QUOTER_ADDRESS, QUOTER_ABI } from "../constants";
+import { formatUnits, parseUnits } from "viem";
+import { SWAP_ROUTER_ADDRESS, SWAP_ROUTER_ABI, QUOTER_ADDRESS, QUOTER_ABI } from "../constants";
 
 export async function getQuote(
     tokenInAddress: string,
