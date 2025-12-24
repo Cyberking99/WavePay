@@ -2,36 +2,32 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export function OrderBook() {
     // Mock Data
-    const asks = [
-        { price: 3005.50, amount: 1.2, total: 3606.60 },
-        { price: 3004.20, amount: 0.5, total: 1502.10 },
-        { price: 3003.80, amount: 2.1, total: 6307.98 },
-        { price: 3002.50, amount: 0.8, total: 2402.00 },
-        { price: 3001.00, amount: 5.0, total: 15005.00 },
-    ];
+    const asks = Array.from({ length: 20 }).map((_, i) => ({
+        price: 3000 + (i + 1) * 0.5,
+        amount: Math.random() * 5,
+        total: (3000 + (i + 1) * 0.5) * (Math.random() * 5)
+    })).reverse();
 
-    const bids = [
-        { price: 2999.00, amount: 1.5, total: 4498.50 },
-        { price: 2998.50, amount: 0.9, total: 2698.65 },
-        { price: 2997.20, amount: 3.2, total: 9591.04 },
-        { price: 2996.00, amount: 1.1, total: 3295.60 },
-        { price: 2995.50, amount: 10.0, total: 29955.00 },
-    ];
+    const bids = Array.from({ length: 20 }).map((_, i) => ({
+        price: 3000 - (i + 1) * 0.5,
+        amount: Math.random() * 5,
+        total: (3000 - (i + 1) * 0.5) * (Math.random() * 5)
+    }));
 
     return (
         <Card className="h-full border-border bg-card/50 backdrop-blur-sm flex flex-col">
             <CardHeader className="py-3 px-4 border-b border-border">
                 <CardTitle className="text-sm font-medium">Order Book</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 p-0 overflow-hidden text-xs font-mono">
-                <div className="flex px-4 py-2 text-muted-foreground border-b border-border/50">
+            <CardContent className="flex-1 flex flex-col p-0 overflow-hidden text-xs font-mono">
+                <div className="flex px-4 py-2 text-muted-foreground border-b border-border/50 bg-background/50">
                     <div className="flex-1">Price (USDC)</div>
                     <div className="flex-1 text-right">Amount (ETH)</div>
                     <div className="hidden sm:block flex-1 text-right">Total</div>
                 </div>
 
-                {/* Asks (Sells) - Red */}
-                <div className="flex flex-col-reverse justify-end max-h-[50%] overflow-hidden">
+                {/* Asks (Sells) - Red - Scroll from bottom */}
+                <div className="flex-1 overflow-y-auto flex flex-col-reverse justify-end scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent">
                     {asks.map((ask, i) => (
                         <div key={i} className="flex px-4 py-1 hover:bg-secondary/40 cursor-pointer">
                             <div className="flex-1 text-red-500">{ask.price.toFixed(2)}</div>
@@ -46,7 +42,7 @@ export function OrderBook() {
                 </div>
 
                 {/* Bids (Buys) - Green */}
-                <div className="max-h-[50%] overflow-hidden">
+                <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent">
                     {bids.map((bid, i) => (
                         <div key={i} className="flex px-4 py-1 hover:bg-secondary/40 cursor-pointer">
                             <div className="flex-1 text-green-500">{bid.price.toFixed(2)}</div>
