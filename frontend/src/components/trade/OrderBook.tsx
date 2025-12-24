@@ -6,7 +6,7 @@ export function OrderBook() {
         price: 3000 + (i + 1) * 0.5,
         amount: Math.random() * 5,
         total: (3000 + (i + 1) * 0.5) * (Math.random() * 5)
-    })).reverse();
+    }));
 
     const bids = Array.from({ length: 20 }).map((_, i) => ({
         price: 3000 - (i + 1) * 0.5,
@@ -27,7 +27,7 @@ export function OrderBook() {
                 </div>
 
                 {/* Asks (Sells) - Red - Scroll from bottom */}
-                <div className="flex-1 overflow-y-auto flex flex-col-reverse justify-end scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto flex flex-col-reverse scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent">
                     {asks.map((ask, i) => (
                         <div key={i} className="flex px-4 py-1 hover:bg-secondary/40 cursor-pointer">
                             <div className="flex-1 text-red-500">{ask.price.toFixed(2)}</div>
