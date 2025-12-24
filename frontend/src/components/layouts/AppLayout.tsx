@@ -53,7 +53,7 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background dark w-full">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div

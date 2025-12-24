@@ -27,7 +27,7 @@ export default function TradePage() {
     }, []);
 
     return (
-        <div className="container mx-auto p-4 max-w-[1600px] h-[calc(100vh-80px)] min-h-[800px] flex flex-col gap-4">
+        <div className="container mx-auto p-4 max-w-[1600px] min-h-[calc(100vh-80px)] flex flex-col gap-4">
 
             {/* Header / Pair Selector */}
             <div className="flex justify-between items-center">
