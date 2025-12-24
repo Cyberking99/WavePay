@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useSendTransaction, useBalance } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useSendTransaction } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
 import { toast } from "sonner";
 import { getSwapQuote, Token, QuoteResponse } from "@/lib/blockchain/exchange";
@@ -27,10 +27,18 @@ export function OrderForm({ baseToken, quoteToken }: OrderFormProps) {
     const tokenIn = side === "buy" ? quoteToken : baseToken; // buying BASE with QUOTE (e.g. buy ETH with USDC)
     const tokenOut = side === "buy" ? baseToken : quoteToken;
 
-    const { data: balanceIn } = useBalance({
-        address: address,
-        token: tokenIn?.address as `0x${string}`,
+    const { data: balanceResult } = useReadContract({
+        address: tokenIn?.address as `0x${string}`,
+        abi: USDC_ABI,
+        functionName: "balanceOf",
+        args: [address as `0x${string}`],
+        query: { enabled: !!address && !!tokenIn?.address }
     });
+
+    const balanceIn = balanceResult !== undefined ? {
+        formatted: formatUnits(balanceResult, tokenIn?.decimals || 18),
+        value: balanceResult
+    } : undefined;
 
     useEffect(() => {
         const fetchQuote = async () => {
