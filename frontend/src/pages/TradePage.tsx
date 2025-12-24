@@ -10,6 +10,8 @@ export default function TradePage() {
     const [tokens, setTokens] = useState<Token[]>([]);
     const [baseToken, setBaseToken] = useState<Token | null>(null);
     const [quoteToken, setQuoteToken] = useState<Token | null>(null);
+    const [poolAddress, setPoolAddress] = useState<string | null>(null);
+    const [poolStats, setPoolStats] = useState<PoolStats | null>(null);
 
     // Initial load
     useEffect(() => {
@@ -26,6 +28,26 @@ export default function TradePage() {
         };
         loadTokens();
     }, []);
+
+    // Fetch Pool Address and Stats
+    useEffect(() => {
+        const loadPoolData = async () => {
+            if (!baseToken) return;
+
+            // 1. Get Pool Address
+            const address = await fetchPoolAddress(baseToken.address);
+            setPoolAddress(address);
+
+            if (address) {
+                // 2. Get Pool Stats
+                const stats = await fetchPoolStats(address);
+                setPoolStats(stats);
+            } else {
+                setPoolStats(null);
+            }
+        };
+        loadPoolData();
+    }, [baseToken]);
 
     return (
         <div className="container mx-auto p-4 max-w-[1600px] min-h-[calc(100vh-80px)] flex flex-col gap-4">
@@ -49,10 +71,19 @@ export default function TradePage() {
                         </SelectContent>
                     </Select>
 
-                    {baseToken && (
-                        <div className="flex gap-4 text-sm">
-                            <span className="text-green-500 font-medium">3,000.00</span>
-                            <span className="text-muted-foreground">24h Vol: $42.5M</span>
+                    {baseToken && poolStats && (
+                        <div className="flex gap-4 text-sm items-center">
+                            <span className="text-green-500 font-medium text-lg">${Number(poolStats.price_usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                            <div className="flex flex-col text-xs">
+                                <span className={Number(poolStats.price_change_percentage_h24) >= 0 ? "text-green-500" : "text-red-500"}>
+                                    {Number(poolStats.price_change_percentage_h24).toFixed(2)}%
+                                </span>
+                                <span className="text-muted-foreground">24h</span>
+                            </div>
+                            <div className="flex flex-col text-xs border-l border-border pl-4">
+                                <span className="text-foreground font-medium">${Number(poolStats.volume_usd_h24).toLocaleString(undefined, { notation: "compact" })}</span>
+                                <span className="text-muted-foreground">Vol 24h</span>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -61,11 +92,15 @@ export default function TradePage() {
             {/* Main Trading Layout */}
             <div className="grid grid-cols-12 gap-4 flex-1">
 
-                {/* Left: Chart (8 cols) */}
+                {/* Left: Chart & Recent Trades (8 cols) */}
                 <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-4">
                     {/* Chart Area */}
-                    <div className="flex-1 min-h-[400px]">
-                        {baseToken && <PriceChart symbol={baseToken.symbol} address={baseToken.address} />}
+                    <div className="h-[500px]">
+                        {baseToken && <PriceChart symbol={baseToken.symbol} poolAddress={poolAddress} />}
+                    </div>
+                    {/* Recent Trades (New) */}
+                    <div className="flex-1 min-h-[300px]">
+                        {poolAddress && <RecentTrades poolAddress={poolAddress} />}
                     </div>
                 </div>
 
