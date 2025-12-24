@@ -52,74 +52,76 @@ export default function TradePage() {
     }, [baseToken]);
 
     return (
-        <div className="container mx-auto p-4 max-w-[1600px] min-h-[calc(100vh-80px)] flex flex-col gap-4">
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] p-4 lg:overflow-hidden">
 
-            {/* Header / Pair Selector */}
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                    <Select
-                        value={baseToken?.symbol}
-                        onValueChange={(val) => setBaseToken(tokens.find(t => t.symbol === val) || null)}
-                    >
-                        <SelectTrigger className="w-[180px] font-display font-bold text-lg border-none bg-transparent p-0 hover:bg-transparent shadow-none focus:ring-0 text-white">
-                            <SelectValue placeholder="Select pair">
-                                {baseToken && quoteToken ? `${baseToken.symbol} / ${quoteToken.symbol}` : "Loading..."}
-                            </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {tokens.filter(t => t.symbol !== "USDC").map(t => (
-                                <SelectItem key={t.address} value={t.symbol}>{t.symbol} / USDC</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+            {/* Left Column (Chart & Trades) */}
+            <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-4">
+                {/* Header Stats */}
+                <div className="flex justify-between items-center bg-card/50 backdrop-blur-sm p-3 rounded-xl border border-border">
+                    <div className="flex items-center gap-2">
+                        {baseToken ? (
+                            <>
+                                <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs overflow-hidden">
+                                    <img src={baseToken.logoURI || "https://token-icons.s3.amazonaws.com/eth.png"} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="font-display font-bold text-sm">{baseToken.symbol} / {quoteToken?.symbol || "USDC"}</span>
+                                    <span className="text-[10px] text-muted-foreground">Base Network</span>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="h-8 w-32 bg-secondary/50 animate-pulse rounded" />
+                        )}
+                    </div>
 
-                    {baseToken && poolStats && (
-                        <div className="flex gap-4 text-sm items-center">
-                            <span className="text-green-500 font-medium text-lg">${Number(poolStats.price_usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
-                            <div className="flex flex-col text-xs">
-                                <span className={Number(poolStats.price_change_percentage_h24) >= 0 ? "text-green-500" : "text-red-500"}>
+                    {poolStats ? (
+                        <div className="flex flex-col items-end md:flex-row md:items-center md:gap-6 text-sm">
+                            <div className="text-right">
+                                <div className="text-xs text-muted-foreground">Price</div>
+                                <div className="font-mono font-medium">${Number(poolStats.price_usd).toFixed(4)}</div>
+                            </div>
+                            <div className="text-right hidden sm:block">
+                                <div className="text-xs text-muted-foreground">24h Vol</div>
+                                <div className="font-mono text-muted-foreground">${(Number(poolStats.volume_usd_h24) / 1000).toFixed(1)}k</div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-xs text-muted-foreground">24h Change</div>
+                                <div className={`font-mono ${Number(poolStats.price_change_percentage_h24) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                     {Number(poolStats.price_change_percentage_h24).toFixed(2)}%
-                                </span>
-                                <span className="text-muted-foreground">24h</span>
+                                </div>
                             </div>
-                            <div className="flex flex-col text-xs border-l border-border pl-4">
-                                <span className="text-foreground font-medium">${Number(poolStats.volume_usd_h24).toLocaleString(undefined, { notation: "compact" })}</span>
-                                <span className="text-muted-foreground">Vol 24h</span>
-                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex gap-4 text-sm animate-pulse">
+                            <div className="h-8 w-20 bg-secondary/50 rounded" />
                         </div>
                     )}
                 </div>
-            </div>
 
-            {/* Main Trading Layout */}
-            <div className="grid grid-cols-12 gap-4 flex-1">
-
-                {/* Left: Chart & Recent Trades (8 cols) */}
-                <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-4">
-                    {/* Chart Area */}
-                    <div className="h-[500px]">
-                        {baseToken && <PriceChart symbol={baseToken.symbol} poolAddress={poolAddress} />}
-                    </div>
-                    {/* Recent Trades (New) */}
-                    <div className="flex-1 min-h-[300px]">
-                        {poolAddress && <RecentTrades poolAddress={poolAddress} userAddress={address} />}
-                    </div>
+                {/* Chart Area */}
+                <div className="flex-none lg:flex-1 min-h-[350px] lg:min-h-0">
+                    {baseToken && <PriceChart symbol={baseToken.symbol} poolAddress={poolAddress} />}
                 </div>
 
-                {/* Right: Order Book & Order Form (4 cols) */}
-                <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 h-full">
-                    {/* Order Book (Top Half) */}
-                    <div className="h-[40%] min-h-[300px]">
-                        <OrderBook />
-                    </div>
+                {/* Recent Trades (Hidden on small mobile, visible on desktop or large mobile? Let's keep it stacked) */}
+                <div className="flex-none lg:flex-1 min-h-[300px] lg:min-h-0">
+                    {poolAddress && <RecentTrades poolAddress={poolAddress} userAddress={address} />}
+                </div>
+            </div>
 
-                    {/* Order Form (Bottom Half) */}
-                    <div className="flex-1 min-h-[350px]">
-                        <OrderForm baseToken={baseToken} quoteToken={quoteToken} />
-                    </div>
+            {/* Right Column (Order Form & Book) */}
+            <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 lg:h-full lg:overflow-hidden">
+                {/* Order Form */}
+                <div className="flex-none">
+                    <OrderForm baseToken={baseToken} quoteToken={quoteToken} />
                 </div>
 
+                {/* Order Book */}
+                <div className="flex-1 min-h-[300px] lg:min-h-0 lg:overflow-hidden">
+                    <OrderBook />
+                </div>
             </div>
+
         </div>
     );
 }
