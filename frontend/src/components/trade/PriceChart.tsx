@@ -1,4 +1,4 @@
-import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
+import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp, CandlestickSeries } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 
@@ -100,7 +100,7 @@ export function PriceChart({ symbol, address }: PriceChartProps) {
             height: 400,
         });
 
-        const candlestickSeries = (chart as any).addCandlestickSeries({
+        const candlestickSeries = chart.addSeries(CandlestickSeries, {
             upColor: '#22c55e',
             downColor: '#ef4444',
             borderVisible: false,
