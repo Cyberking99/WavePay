@@ -101,15 +101,40 @@ export async function fetchPoolAddress(tokenAddress: string): Promise<string | n
     }
 }
 
+// Timeframe options supported by UI
+export type Timeframe = '15m' | '1H' | '4H' | '1D';
+
 /**
  * Fetch OHLCV (candlestick) data for a pool
- * Timeframes: day, hour, minute
+ * Handles aggregation for different timeframes
  */
-export async function fetchOHLCV(poolAddress: string, timeframe: "hour" | "day" | "minute" = "hour"): Promise<OHLCV[]> {
+export async function fetchOHLCV(poolAddress: string, timeframe: Timeframe = '1H'): Promise<OHLCV[]> {
     try {
-        const response = await axios.get(`${GECKO_TERMINAL_API_URL}/networks/base/pools/${poolAddress}/ohlcv/${timeframe}`, {
+        let apiTimeframe = 'hour';
+        let aggregate = 1;
+
+        switch (timeframe) {
+            case '15m':
+                apiTimeframe = 'minute';
+                aggregate = 15;
+                break;
+            case '1H':
+                apiTimeframe = 'hour';
+                aggregate = 1;
+                break;
+            case '4H':
+                apiTimeframe = 'hour';
+                aggregate = 4;
+                break;
+            case '1D':
+                apiTimeframe = 'day';
+                aggregate = 1;
+                break;
+        }
+
+        const response = await axios.get(`${GECKO_TERMINAL_API_URL}/networks/base/pools/${poolAddress}/ohlcv/${apiTimeframe}`, {
             params: {
-                aggregate: 1, // 1h, 1d candles
+                aggregate: aggregate,
                 limit: 100
             }
         });

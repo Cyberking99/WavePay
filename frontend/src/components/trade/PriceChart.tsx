@@ -1,7 +1,7 @@
 import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp, CandlestickSeries } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { fetchOHLCV } from '@/lib/blockchain/exchange';
+import { fetchOHLCV, Timeframe } from '@/lib/blockchain/exchange';
 
 interface PriceChartProps {
     symbol: string;
@@ -12,7 +12,8 @@ export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-    const [loading, setLoading] = useState(false); // Controlled by effect depending on poolAddress
+    const [loading, setLoading] = useState(false);
+    const [timeframe, setTimeframe] = useState<Timeframe>('1H');
 
     // Fetch data from GeckoTerminal
     useEffect(() => {
@@ -21,7 +22,7 @@ export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
             setLoading(true);
             try {
                 // Fetch OHLCV data for the pool
-                const data = await fetchOHLCV(poolAddress, "hour");
+                const data = await fetchOHLCV(poolAddress, timeframe);
 
                 if (seriesRef.current) {
                     // Map time to UTCTimestamp
@@ -39,7 +40,7 @@ export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
         };
 
         fetchData();
-    }, [poolAddress]);
+    }, [poolAddress, timeframe]);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -55,6 +56,10 @@ export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
             },
             width: chartContainerRef.current.clientWidth,
             height: 400,
+            timeScale: {
+                 timeVisible: true,
+                 secondsVisible: false,
+            }
         });
 
         const candlestickSeries = chart.addSeries(CandlestickSeries, {
@@ -85,9 +90,26 @@ export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
     return (
         <Card className="p-4 border-border bg-card/50 backdrop-blur-sm h-full flex flex-col">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="font-display font-medium text-lg flex items-center gap-2">
-                    {symbol}/USDC <span className="text-xs text-muted-foreground px-2 py-1 bg-secondary rounded">1H</span>
-                </h3>
+                <div className="flex items-center gap-4">
+                    <h3 className="font-display font-medium text-lg flex items-center gap-2">
+                        {symbol}/USDC
+                    </h3>
+                    <div className="flex bg-secondary/30 rounded-lg p-1 gap-1">
+                        {(['15m', '1H', '4H', '1D'] as Timeframe[]).map((tf) => (
+                            <button
+                                key={tf}
+                                onClick={() => setTimeframe(tf)}
+                                className={`px-2 py-1 text-xs rounded-md transition-all ${
+                                    timeframe === tf 
+                                    ? 'bg-background text-foreground shadow-sm' 
+                                    : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                {tf}
+                            </button>
+                        ))}
+                    </div>
+                </div>
                 {loading && <span className="text-xs text-muted-foreground animate-pulse">Loading...</span>}
             </div>
             <div ref={chartContainerRef} className="flex-1 w-full min-h-[400px]" />
