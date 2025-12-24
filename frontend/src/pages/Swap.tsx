@@ -101,7 +101,7 @@ export default function Swap() {
         });
     };
 
-    const needsApproval = quote && allowance !== undefined && allowance < BigInt(quote.sellAmount);
+    const needsApproval = quote && allowance !== undefined && (allowance as bigint) < BigInt(quote.sellAmount);
 
     return (
         <div className="max-w-md mx-auto mt-10">
