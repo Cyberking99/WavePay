@@ -36,7 +36,7 @@ export default function TradePage() {
                         value={baseToken?.symbol}
                         onValueChange={(val) => setBaseToken(tokens.find(t => t.symbol === val) || null)}
                     >
-                        <SelectTrigger className="w-[180px] font-display font-bold text-lg border-none bg-transparent p-0 hover:bg-transparent shadow-none focus:ring-0">
+                        <SelectTrigger className="w-[180px] font-display font-bold text-lg border-none bg-transparent p-0 hover:bg-transparent shadow-none focus:ring-0 text-white">
                             <SelectValue placeholder="Select pair">
                                 {baseToken && quoteToken ? `${baseToken.symbol} / ${quoteToken.symbol}` : "Loading..."}
                             </SelectValue>
