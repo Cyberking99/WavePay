@@ -101,6 +101,12 @@ export function OrderForm({ baseToken, quoteToken }: OrderFormProps) {
 
     const needsApproval = quote && allowance !== undefined && (allowance as bigint) < BigInt(quote.sellAmount);
 
+    const [orderType, setOrderType] = useState<"market" | "limit">("market");
+    const [limitPrice, setLimitPrice] = useState("");
+
+    // Calculation for Limit Order Output
+    const limitTotal = (parseFloat(amount) * parseFloat(limitPrice || "0")).toFixed(6);
+
     return (
         <Card className="border-border bg-card/50 backdrop-blur-sm h-full">
             <Tabs defaultValue="buy" className="w-full" onValueChange={(v) => setSide(v as "buy" | "sell")}>
@@ -120,11 +126,44 @@ export function OrderForm({ baseToken, quoteToken }: OrderFormProps) {
                 </TabsList>
 
                 <CardContent className="space-y-4 pt-6">
-                    {/* Order Type Selector (Mock for now) */}
-                    <div className="flex gap-2 mb-4">
-                        <Button variant="secondary" size="sm" className="bg-secondary/80 text-foreground">Market</Button>
-                        <Button variant="ghost" size="sm" className="text-muted-foreground" disabled>Limit</Button>
+                    {/* Order Type Selector */}
+                    <div className="flex gap-2 mb-4 bg-secondary/30 p-1 rounded-lg">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`flex-1 h-7 text-xs ${orderType === "market" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                            onClick={() => setOrderType("market")}
+                        >
+                            Market
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`flex-1 h-7 text-xs ${orderType === "limit" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+                            onClick={() => setOrderType("limit")}
+                        >
+                            Limit
+                        </Button>
                     </div>
+
+                    {/* Price Input (Only for Limit) */}
+                    {orderType === "limit" && (
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                                <Label>Price ({quoteToken?.symbol})</Label>
+                                <span className="text-blue-400 cursor-pointer" onClick={() => setLimitPrice(quote?.price || "")}>Last: {quote ? Number(quote.price).toFixed(4) : "-"}</span>
+                            </div>
+                            <div className="relative">
+                                <Input
+                                    type="number"
+                                    placeholder="0.00"
+                                    className="pr-16 text-right font-mono"
+                                    value={limitPrice}
+                                    onChange={(e) => setLimitPrice(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <div className="flex justify-between text-xs text-muted-foreground">
@@ -147,19 +186,19 @@ export function OrderForm({ baseToken, quoteToken }: OrderFormProps) {
 
                     <div className="space-y-2">
                         <div className="flex justify-between text-xs text-muted-foreground">
-                            <Label>Receive ({tokenOut?.symbol})</Label>
-                            <span>Best price</span>
+                            <Label>Total ({tokenOut?.symbol})</Label>
+                            <span>{orderType === "market" ? "Estimated" : "Total Value"}</span>
                         </div>
                         <div className="relative">
                             <Input
                                 type="number"
                                 placeholder="0.00"
                                 className="pr-16 text-right font-mono bg-secondary/20"
-                                value={quote ? formatUnits(BigInt(quote.buyAmount), tokenOut?.decimals || 18) : ""}
+                                value={orderType === "limit" ? limitTotal : (quote ? formatUnits(BigInt(quote.buyAmount), tokenOut?.decimals || 18) : "")}
                                 readOnly
                             />
                             <div className="absolute left-3 top-2.5 text-sm font-medium text-muted-foreground">
-                                Est.
+                                Get
                             </div>
                         </div>
                     </div>
@@ -175,7 +214,7 @@ export function OrderForm({ baseToken, quoteToken }: OrderFormProps) {
                                 onClick={() => {
                                     if (balanceIn) {
                                         const val = parseFloat(balanceIn.formatted) * (pct / 100);
-                                        setAmount(val.toFixed(6)); // TODO: handle decimals properly
+                                        setAmount(val.toFixed(6));
                                     }
                                 }}
                             >
@@ -184,7 +223,7 @@ export function OrderForm({ baseToken, quoteToken }: OrderFormProps) {
                         ))}
                     </div>
 
-                    {quote && (
+                    {orderType === "market" && quote && (
                         <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t border-border">
                             <div className="flex justify-between">
                                 <span>Price Impact</span>
@@ -199,7 +238,15 @@ export function OrderForm({ baseToken, quoteToken }: OrderFormProps) {
 
                     {loading && <div className="text-center text-xs text-muted-foreground animate-pulse">Fetching quote...</div>}
 
-                    {needsApproval ? (
+                    {orderType === "limit" ? (
+                        <Button
+                            className="w-full h-10 font-medium mt-4 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                            disabled={!amount || !limitPrice}
+                            onClick={() => toast.info("Limit Orders coming soon!")}
+                        >
+                            Place Limit Order
+                        </Button>
+                    ) : needsApproval ? (
                         <Button
                             className="w-full h-10 gradient-primary font-medium mt-4"
                             onClick={handleApprove}
