@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
 import { PriceChart } from "@/components/trade/PriceChart";
 import { OrderForm } from "@/components/trade/OrderForm";
 import { OrderBook } from "@/components/trade/OrderBook";
@@ -12,6 +13,7 @@ export default function TradePage() {
     const [quoteToken, setQuoteToken] = useState<Token | null>(null);
     const [poolAddress, setPoolAddress] = useState<string | null>(null);
     const [poolStats, setPoolStats] = useState<PoolStats | null>(null);
+    const { address } = useAccount();
 
     // Initial load
     useEffect(() => {
@@ -100,7 +102,7 @@ export default function TradePage() {
                     </div>
                     {/* Recent Trades (New) */}
                     <div className="flex-1 min-h-[300px]">
-                        {poolAddress && <RecentTrades poolAddress={poolAddress} />}
+                        {poolAddress && <RecentTrades poolAddress={poolAddress} userAddress={address} />}
                     </div>
                 </div>
 

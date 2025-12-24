@@ -172,6 +172,7 @@ export interface Trade {
     block_timestamp: number;
     tx_hash: string;
     from_token_address: string;
+    maker: string; // The address that initiated the trade
 }
 
 /**
@@ -209,7 +210,8 @@ export async function fetchRecentTrades(poolAddress: string): Promise<Trade[]> {
             to_token_amount: trade.attributes.to_token_amount,
             block_timestamp: new Date(trade.attributes.block_timestamp).getTime(),
             tx_hash: trade.attributes.tx_hash,
-            from_token_address: trade.attributes.from_token_address
+            from_token_address: trade.attributes.from_token_address,
+            maker: trade.attributes.tx_from_address || ""
         }));
     } catch (error) {
         console.error("Error fetching trades:", error);
