@@ -57,8 +57,8 @@ export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
             width: chartContainerRef.current.clientWidth,
             height: 400,
             timeScale: {
-                 timeVisible: true,
-                 secondsVisible: false,
+                timeVisible: true,
+                secondsVisible: false,
             }
         });
 
@@ -99,11 +99,10 @@ export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
                             <button
                                 key={tf}
                                 onClick={() => setTimeframe(tf)}
-                                className={`px-2 py-1 text-xs rounded-md transition-all ${
-                                    timeframe === tf 
-                                    ? 'bg-background text-foreground shadow-sm' 
-                                    : 'text-muted-foreground hover:text-foreground'
-                                }`}
+                                className={`px-2 py-1 text-xs rounded-md transition-all ${timeframe === tf
+                                        ? 'bg-background text-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                    }`}
                             >
                                 {tf}
                             </button>
@@ -112,7 +111,7 @@ export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
                 </div>
                 {loading && <span className="text-xs text-muted-foreground animate-pulse">Loading...</span>}
             </div>
-            <div ref={chartContainerRef} className="flex-1 w-full min-h-[400px]" />
+            <div ref={chartContainerRef} className="flex-1 w-full min-h-[200px]" />
         </Card>
     );
 }

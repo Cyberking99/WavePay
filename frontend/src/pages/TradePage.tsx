@@ -55,14 +55,14 @@ export default function TradePage() {
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] p-4 lg:overflow-hidden">
 
             {/* Left Column (Chart & Trades) */}
-            <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-4">
+            <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-4 lg:h-full lg:overflow-hidden">
                 {/* Header Stats */}
-                <div className="flex justify-between items-center bg-card/50 backdrop-blur-sm p-3 rounded-xl border border-border">
+                <div className="flex-none flex justify-between items-center bg-card/50 backdrop-blur-sm p-3 rounded-xl border border-border">
                     <div className="flex items-center gap-2">
                         {baseToken ? (
                             <>
                                 <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs overflow-hidden">
-                                    <img src={baseToken.logoURI || "https://token-icons.s3.amazonaws.com/eth.png"} className="w-full h-full object-cover" />
+                                     <img src={baseToken.logoURI || "https://token-icons.s3.amazonaws.com/eth.png"} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="font-display font-bold text-sm">{baseToken.symbol} / {quoteToken?.symbol || "USDC"}</span>
@@ -99,12 +99,12 @@ export default function TradePage() {
                 </div>
 
                 {/* Chart Area */}
-                <div className="flex-none lg:flex-1 min-h-[350px] lg:min-h-0">
+                <div className="flex-none lg:flex-[2] min-h-[350px] lg:min-h-0 lg:overflow-hidden">
                     {baseToken && <PriceChart symbol={baseToken.symbol} poolAddress={poolAddress} />}
                 </div>
 
-                {/* Recent Trades (Hidden on small mobile, visible on desktop or large mobile? Let's keep it stacked) */}
-                <div className="flex-none lg:flex-1 min-h-[300px] lg:min-h-0">
+                {/* Recent Trades */}
+                <div className="flex-none lg:flex-1 min-h-[300px] lg:min-h-[250px] lg:overflow-hidden">
                     {poolAddress && <RecentTrades poolAddress={poolAddress} userAddress={address} />}
                 </div>
             </div>
