@@ -12,7 +12,7 @@ import { TokenSelector } from "@/components/TokenSelector";
 import { USDC_ABI } from "@/lib/constants";
 
 export default function Swap() {
-    const { address } = useAccount();
+    const { address, chain } = useAccount();
     const [tokens, setTokens] = useState<Token[]>([]);
     const [tokenIn, setTokenIn] = useState<Token | null>(null);
     const [tokenOut, setTokenOut] = useState<Token | null>(null);
@@ -79,24 +79,15 @@ export default function Swap() {
     }, [isSuccess]);
 
     const handleApprove = () => {
-        if (!tokenIn || !quote) return;
+        if (!tokenIn || !quote || !address || !chain) return;
         writeContract({
             address: tokenIn.address as `0x${string}`,
             abi: USDC_ABI,
             functionName: "approve",
             args: [quote.allowanceTarget as `0x${string}`, BigInt(quote.sellAmount)],
+            chain,
+            account: address
         });
-    };
-
-    const handleSwap = () => {
-        if (!quote || !address) return;
-
-        writeContract({
-            address: quote.to as `0x${string}`,
-            abi: USDC_ABI,
-            functionName: "approve",
-            args: [quote.allowanceTarget as `0x${string}`, BigInt(quote.sellAmount)],
-        } as any);
     };
 
     const { sendTransaction, isPending: isSendPending } = useSendTransaction();
