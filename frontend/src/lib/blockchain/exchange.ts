@@ -69,3 +69,63 @@ export async function getSwapQuote(
         return null;
     }
 }
+/**
+ * GeckoTerminal API
+ */
+const GECKO_TERMINAL_API_URL = "https://api.geckoterminal.com/api/v2";
+
+export interface OHLCV {
+    time: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+}
+
+/**
+ * Fetch the top liquidity pool for a token on Base to get chart data
+ */
+export async function fetchPoolAddress(tokenAddress: string): Promise<string | null> {
+    try {
+        // Search for pools involving this token
+        // Use the 'networks/base/tokens/{address}/pools' endpoint
+        const response = await axios.get(`${GECKO_TERMINAL_API_URL}/networks/base/tokens/${tokenAddress}/pools?page=1`);
+        const pools = response.data.data;
+        if (!pools || pools.length === 0) return null;
+
+        // Return the address of the first pool (usually the highest liquidity one)
+        return pools[0].attributes.address;
+    } catch (error) {
+        console.error("Error fetching pool address:", error);
+        return null;
+    }
+}
+
+/**
+ * Fetch OHLCV (candlestick) data for a pool
+ * Timeframes: day, hour, minute
+ */
+export async function fetchOHLCV(poolAddress: string, timeframe: "hour" | "day" | "minute" = "hour"): Promise<OHLCV[]> {
+    try {
+        const response = await axios.get(`${GECKO_TERMINAL_API_URL}/networks/base/pools/${poolAddress}/ohlcv/${timeframe}`, {
+            params: {
+                aggregate: 1, // 1h, 1d candles
+                limit: 100
+            }
+        });
+
+        const data = response.data.data.attributes.ohlcv_list;
+
+        // Format: [timestamp, open, high, low, close, volume]
+        return data.map((item: any[]) => ({
+            time: item[0],
+            open: item[1],
+            high: item[2],
+            low: item[3],
+            close: item[4]
+        })).sort((a: OHLCV, b: OHLCV) => a.time - b.time); // Ascending order
+    } catch (error) {
+        console.error("Error fetching OHLCV:", error);
+        return [];
+    }
+}

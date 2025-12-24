@@ -1,14 +1,7 @@
 import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp, CandlestickSeries } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
-
-interface OHLCV {
-    time: UTCTimestamp;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-}
+import { fetchPoolAddress, fetchOHLCV } from '@/lib/blockchain/exchange';
 
 interface PriceChartProps {
     symbol: string; // e.g., "WETH"
@@ -37,42 +30,26 @@ export function PriceChart({ symbol, address }: PriceChartProps) {
             if (!address) return;
             setLoading(true);
             try {
-                // Base Sepolia Pool Address (mocking for dev if needed, or using real mainnet/testnet logic)
-                // For this demo, we'll try to fetch a real pool on Base Mainnet for WETH/USDC if possible,
-                // or just some mock data if the API fails or if we are on Sepolia without a good API.
+                // 1. Find the pool for this token pair (Token / USDC)
+                // Note: fetchPoolAddress implementation assumes we are looking for the most liquid pool for the token
+                const poolAddress = await fetchPoolAddress(address);
 
-                // NOTE: GeckoTerminal API usually requires a Pool Address, not just a Token Address.
-                // For simplicity in this demo, we will use a hardcoded pool for WETH/USDC on Base
-                // or fallback to generating realistic mock data if the fetch fails (common on testnets).
-
-                // Real endpoint structure: https://api.geckoterminal.com/api/v2/networks/base/pools/{pool_address}/ohlcv/hour
-
-                // Mock data generator for smooth dev experience on Testnet
-                const mockData: OHLCV[] = [];
-                let time = Math.floor(Date.now() / 1000) as UTCTimestamp;
-                let price = 3000;
-
-                for (let i = 0; i < 1000; i++) {
-                    const volatility = 0.02;
-                    const change = price * volatility * (Math.random() - 0.5);
-                    const open = price;
-                    const close = price + change;
-                    const high = Math.max(open, close) + price * 0.01 * Math.random();
-                    const low = Math.min(open, close) - price * 0.01 * Math.random();
-
-                    mockData.unshift({
-                        time: (time - i * 3600) as UTCTimestamp,
-                        open,
-                        high,
-                        low,
-                        close
-                    });
-
-                    price = open - change * 0.1; // drift
+                if (!poolAddress) {
+                    console.warn(`No pool found for ${symbol}`);
+                    setLoading(false);
+                    return;
                 }
 
+                // 2. Fetch OHLCV data for the pool
+                const data = await fetchOHLCV(poolAddress, "hour");
+
                 if (seriesRef.current) {
-                    seriesRef.current.setData(mockData);
+                    // Map time to UTCTimestamp
+                    const validData = data.map(d => ({
+                        ...d,
+                        time: d.time as UTCTimestamp
+                    }));
+                    seriesRef.current.setData(validData);
                 }
             } catch (error) {
                 console.error("Failed to fetch chart data", error);
@@ -82,7 +59,7 @@ export function PriceChart({ symbol, address }: PriceChartProps) {
         };
 
         fetchData();
-    }, [address]);
+    }, [address, symbol]);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
