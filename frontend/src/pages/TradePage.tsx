@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { PriceChart } from "@/components/trade/PriceChart";
 import { OrderForm } from "@/components/trade/OrderForm";
 import { OrderBook } from "@/components/trade/OrderBook";
-import { fetchTokenList, Token } from "@/lib/blockchain/exchange";
+import { RecentTrades } from "@/components/trade/RecentTrades";
+import { fetchTokenList, Token, fetchPoolAddress, fetchPoolStats, PoolStats } from "@/lib/blockchain/exchange";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function TradePage() {

@@ -1,46 +1,26 @@
 import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp, CandlestickSeries } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { fetchPoolAddress, fetchOHLCV } from '@/lib/blockchain/exchange';
+import { fetchOHLCV } from '@/lib/blockchain/exchange';
 
 interface PriceChartProps {
-    symbol: string; // e.g., "WETH"
-    address: string; // token address
+    symbol: string;
+    poolAddress: string | null;
 }
 
-// GeckoTerminal API specific response types
-interface GeckoOHLCV {
-    0: number; // timestamp
-    1: string; // open
-    2: string; // high
-    3: string; // low
-    4: string; // close
-    5: string; // volume
-}
-
-export function PriceChart({ symbol, address }: PriceChartProps) {
+export function PriceChart({ symbol, poolAddress }: PriceChartProps) {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false); // Controlled by effect depending on poolAddress
 
     // Fetch data from GeckoTerminal
     useEffect(() => {
         const fetchData = async () => {
-            if (!address) return;
+            if (!poolAddress) return;
             setLoading(true);
             try {
-                // 1. Find the pool for this token pair (Token / USDC)
-                // Note: fetchPoolAddress implementation assumes we are looking for the most liquid pool for the token
-                const poolAddress = await fetchPoolAddress(address);
-
-                if (!poolAddress) {
-                    console.warn(`No pool found for ${symbol}`);
-                    setLoading(false);
-                    return;
-                }
-
-                // 2. Fetch OHLCV data for the pool
+                // Fetch OHLCV data for the pool
                 const data = await fetchOHLCV(poolAddress, "hour");
 
                 if (seriesRef.current) {
@@ -59,7 +39,7 @@ export function PriceChart({ symbol, address }: PriceChartProps) {
         };
 
         fetchData();
-    }, [address, symbol]);
+    }, [poolAddress]);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;

@@ -129,3 +129,65 @@ export async function fetchOHLCV(poolAddress: string, timeframe: "hour" | "day" 
         return [];
     }
 }
+
+export interface PoolStats {
+    price_usd: string;
+    volume_usd_h24: string;
+    price_change_percentage_h24: string;
+    fdv_usd?: string;
+    market_cap_usd?: string;
+}
+
+export interface Trade {
+    type: "buy" | "sell";
+    price_usd: string;
+    volume_usd: string;
+    from_token_amount: string;
+    to_token_amount: string;
+    block_timestamp: number;
+    tx_hash: string;
+    from_token_address: string;
+}
+
+/**
+ * Fetch detailed pool stats (Price, Vol, etc.)
+ */
+export async function fetchPoolStats(poolAddress: string): Promise<PoolStats | null> {
+    try {
+        const response = await axios.get(`${GECKO_TERMINAL_API_URL}/networks/base/pools/${poolAddress}`);
+        const attr = response.data.data.attributes;
+        return {
+            price_usd: attr.base_token_price_usd,
+            volume_usd_h24: attr.volume_usd.h24,
+            price_change_percentage_h24: attr.price_change_percentage.h24,
+            fdv_usd: attr.fdv_usd,
+            market_cap_usd: attr.market_cap_usd
+        };
+    } catch (error) {
+        console.error("Error fetching pool stats:", error);
+        return null;
+    }
+}
+
+/**
+ * Fetch recent trades for a pool
+ */
+export async function fetchRecentTrades(poolAddress: string): Promise<Trade[]> {
+    try {
+        const response = await axios.get(`${GECKO_TERMINAL_API_URL}/networks/base/pools/${poolAddress}/trades`);
+
+        return response.data.data.map((trade: any) => ({
+            type: trade.attributes.kind,
+            price_usd: trade.attributes.price_to_in_usd,
+            volume_usd: trade.attributes.volume_in_usd,
+            from_token_amount: trade.attributes.from_token_amount,
+            to_token_amount: trade.attributes.to_token_amount,
+            block_timestamp: new Date(trade.attributes.block_timestamp).getTime(),
+            tx_hash: trade.attributes.tx_hash,
+            from_token_address: trade.attributes.from_token_address
+        }));
+    } catch (error) {
+        console.error("Error fetching trades:", error);
+        return [];
+    }
+}
