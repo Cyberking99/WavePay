@@ -56,6 +56,7 @@
     "ethers-v5": "npm:ethers@^5.7.2",
     "events": "^3.3.0",
     "input-otp": "^1.4.2",
+    "lightweight-charts": "^5.1.0",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
     "process": "^0.11.10",
