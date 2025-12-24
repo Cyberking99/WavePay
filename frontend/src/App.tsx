@@ -11,6 +11,7 @@ import CreateLink from "./pages/CreateLink";
 import PaymentLinks from "./pages/PaymentLinks";
 import LinkDetails from "./pages/LinkDetails";
 import Transactions from "./pages/Transactions";
+import TradePage from "./pages/TradePage";
 import TransactionDetail from "./pages/TransactionDetail";
 import Profile from "./pages/Profile";
 import AppLayout from "./components/layouts/AppLayout";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/bank-accounts" element={<BankAccounts />} />
             <Route path="/swap" element={<Swap />} />
+            <Route path="/trade" element={<TradePage />} />
           </Route>
           <Route path="/pay/:id" element={<Pay />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
